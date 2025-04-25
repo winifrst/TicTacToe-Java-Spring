@@ -1,117 +1,124 @@
-# Project 03 — Java_Bootcamp  
+﻿# Project 03 — Java_Bootcamp
 
-Резюме: в этом проекте ты научишься создавать веб-приложение на языке **Java** с использованием Spring. 
+**Summary:** In this project, you will learn how to create a web application in Java using Spring.
 
-💡 [Нажми сюда](https://new.oprosso.net/p/4cb31ec3f47a4596bc758ea1861fb624), **чтобы поделиться с нами обратной связью на этот проект**. Это анонимно и поможет нашей команде сделать обучение лучше. Рекомендуем заполнить опрос сразу после выполнения проекта.
+💡 *[Click here](https://new.oprosso.net/p/4cb31ec3f47a4596bc758ea1861fb624) to share your feedback on this project.* It's anonymous and will help our team improve the training. We recommend filling out the survey right after completing the project.
 
-## Содержание
+## Contents**
+
  1. [Chapter I](#chapter-i)   
-     - [Инструкция](#инструкция)   
+     - [Instructions](#instructions)   
  2. [Chapter II](#chapter-ii)  
-     - [Общая информация](#общая-информация)  
+     - [General Information](#general-information)  
  3. [Chapter III](#chapter-iii)      
-     - [Задание 0. Создание проекта](#задание-0-создание-проекта)  
-     - [Задание 1. Создать структуру проекта](#задание-1-cоздать-структуру-проекта)  
-     - [Задание 2. Реализация domain-слоя](#задание-2-реализация-domain-слоя)  
-     - [Задание 3. Реализация datasource-слоя](#задание-3-реализация-datasource-слоя)  
-     - [Задание 4. Реализация web-слоя](#задание-4-реализация-web-слоя)  
-     - [Задание 5. Реализация di-слоя](#задание-5-реализация-di-слоя) 
-
-
+     - [Task 0. Creating the Project](#task-0-creating-the-project)  
+     - [Task 1. Creating the Project Structure](#task-1-creating-the-project-structure)  
+     - [Task 2. Implementing the Domain Layer](#task-2-implementing-the-domain-layer)  
+     - [Task 3. Implementing the Datasource Layer](#task-3-implementing-the-datasource-layer)  
+     - [Task 4. Implementing the Web Layer](#task-4-implementing-the-web-layer)  
+     - [Task 5. Implementing the DI Layer](#task-5-implementing-the-di-layer) 
 
 ## Chapter I
-## Инструкция
 
-1. На протяжении всего курса тебя будет сопровождать чувство неопределенности и острого дефицита информации — это нормально. Не забывай, что информация в репозитории и Google всегда с тобой. Как и пиры, и Rocket.Chat. Общайся. Ищи. Опирайся на здравый смысл. Не бойся ошибиться.
-2. Будь внимателен к источникам информации. Проверяй. Думай. Анализируй. Сравнивай. 
-3. Внимательно читай задания. Перечитай несколько раз. 
-4. Читать примеры тоже лучше внимательно. В них может быть что-то, что не указано в явном виде в самом задании.
-5. Тебе могут встретиться несоответствия, когда что-то новое в условиях задачи или примере противоречит уже известному. Если встретилось такое — попробуй разобраться. Если не получилось — запиши вопрос в открытые вопросы и выясни в процессе работы. Не оставляй открытые вопросы неразрешенными. 
-6. Если задание кажется непонятным или невыполнимым — так только кажется. Попробуй его декомпозировать. Скорее всего, отдельные части станут понятными. 
-7. На пути тебе встретятся самые разные задания. Те, что помечены звездочкой (\*) — подходят для более дотошных. Они повышенной сложности и необязательны к выполнению. Но если ты их сделаешь, то получишь дополнительный опыт и знания.
-8. Не пытайся обмануть систему и окружающих. В первую очередь ты обманешь себя.
-9. Есть вопрос? Спроси соседа справа. Если это не помогло — соседа слева.
-10. Когда пользуешься помощью — всегда разбирайся до конца: почему, как и зачем. Иначе помощь не будет иметь смысла.
-11. Всегда делай push только в ветку develop! Ветка master будет проигнорирована. Работай в директории src.
-12. В твоей директории не должно быть иных файлов, кроме тех, что обозначены в заданиях.
+### Instructions
+
+1. Throughout the course, you will experience uncertainty and a severe lack of information — this is normal. Remember that the repository and Google are always available to you, as are your peers and Rocket.Chat. Communicate. Search. Rely on common sense. Do not be afraid of making mistakes.
+1. Pay attention to sources of information. Verify, think, analyze, compare.
+1. Read the assignments carefully. Reread them several times.
+1. It's best to read the examples carefully as well. They may contain something not explicitly stated in the assignment itself.
+1. You might encounter inconsistencies when something new in the task or example contradicts what you already know. If that happens, try to figure it out. If you fail, make a note under “open questions” and resolve it during your work. Do not leave open questions unresolved.
+1. If a task seems unclear or unachievable, it only seems that way. Try decomposing it. Most likely, individual parts will become clearer.
+1. Along the way, you'll encounter many different tasks. Those marked with an asterisk (\*) are for more meticulous learners. They are of higher complexity and are not mandatory, but if you do them, you'll gain additional experience and knowledge.
+1. Do not try to fool the system or those around you. You'll only be fooling yourself.
+1. Have a question? Ask the neighbor on your right. If that doesn't help, ask the neighbor on your left.
+1. When using someone's help, always make sure you understand why, how, and what for. Otherwise, that help is meaningless.
+1. Always push only to the **develop** branch! The **master** branch will be ignored. Work in the **src** directory.
+1. Your directory should not contain any files other than those specified in the tasks.
 
 ## Chapter II
-## Общая информация
 
-**Веб-приложение** – это клиент-серверное приложение, в котором клиент взаимодействует с веб-сервером при помощи браузера. Логика веб-приложения распределена между сервером и клиентом, хранение данных осуществляется преимущественно на сервере, обмен информацией происходит по сети.
+### General Information
 
-**Spring** — один из самых популярных фреймворков для создания веб-приложений на Java. Преимущества **Spring**:
+A web application is a client-server application in which the client interacts with a web server using a browser. The web application logic is distributed between the server and the client; data is primarily stored on the server, and information is exchanged over a network.
 
-- Инверсия управления (IoC) и внедрение зависимостей (Dependency Injection, DI): Spring предоставляет механизмы IoC и DI, которые позволяют управлять зависимостями между компонентами приложения. Благодаря этим механизмам код становится более модульным, уменьшается связанность и улучшается тестируемость приложения.
+**Spring** is one of the most popular frameworks for creating web applications in Java. Advantages of Spring include:
 
-- Модульность: Spring состоит из различных модулей, таких как Spring Core, Spring MVC, Spring Security, Spring Data и другие. Они позволяют разработчикам выбирать только необходимое для их приложений, что способствует легкости и гибкости разработки.
+- **Inversion of Control (IoC) and Dependency Injection (DI)**: Spring provides IoC and DI mechanisms that allow you to manage dependencies between application components. These mechanisms make code more modular, reduce coupling, and improve testability.
+- **Modularity**: Spring consists of various modules such as Spring Core, Spring MVC, Spring Security, Spring Data, and more. This allows developers to select only what they need for their applications, making development lightweight and flexible.
+- **Support for Aspect-Oriented Programming (AOP)**: Spring provides tools for working with aspects, allowing cross-cutting concerns (e.g., logging, transactions) to be separated from the main application logic, improving its modularity and maintainability.
+- **Transaction Support**: Spring offers declarative transaction management, allowing you to manage transactions without direct calls to the data access layer APIs.
+- **Easy Testing**: With DI and IoC, Spring-based applications are easier to test because dependencies can be replaced with mock objects for easier unit testing.
+- **Support for Various Application Types**: Spring provides capabilities for developing a wide spectrum of applications, including web applications (Spring MVC), RESTful APIs (Spring WebFlux), microservices, data processing, database integration, and more.
 
-- Поддержка аспектно-ориентированного программирования (Aspect-Oriented Programming, AOP): Spring предоставляет возможности для работы с аспектами, что позволяет выносить кросс-режимные функции (например, логирование, транзакции) из основной логики приложения, улучшая его модульность и управляемость.
+**Topics to study:**
 
-- Поддержка транзакций: Spring обеспечивает поддержку декларативного управления транзакциями, что позволяет управлять транзакциями без прямых вызовов API уровня доступа к данным.
-
-- Удобство тестирования: Благодаря DI и IoC, приложения, построенные с использованием Spring, легче тестируются, поскольку зависимости могут быть легко заменены на фиктивные объекты (mock objects) для упрощения модульного тестирования.
-
-- Поддержка различных типов приложений: Spring предоставляет возможности для разработки широкого спектра приложений, включая веб-приложения (Spring MVC), RESTful API (Spring WebFlux), микросервисы, обработку данных, интеграцию с базами данных и многое другое.
-
-### Темы для изучения:
-- Веб-приложение;
+- Web application;
 - Spring;
 - API;
-- Алгоритм «Минимакс»;
+- The Minimax algorithm;
 - MVC.
 
 ## Chapter III
-### Проект: Крестики-Нолики
-Рассматриваются основы построения веб-приложений и использование фреймворка Spring.
-Проект создаётся один раз и используется для всех последующих заданий.
 
-## Задание 0. Создание проекта
-В IntelliJ Idea создай новый проект: 
-- Выбери язык Java.
-- Выбери систему сборки Gradle.
-- Выбери JDK 18, если такого нет, то загрузи любой JDK 18 версии.
-- Выбери для Gradle DSL — Kotlin.
+**Project: Tic-Tac-Toe**
 
-## Задание 1. Создание структуры проекта
-- Каждый слой является отдельным пакетом.
-- Структура проекта должна иметь следующие слои: web, domain, datasource, di.
-- Слой web должен включать в себя как минимум пакеты model, controller, mapper для взаимодействия с клиентом.
-- Слой domain должен включать в себя как минимум пакеты model, service для реализации бизнес-логики приложения.
-- Слой datasource должен включать в себя как минимум пакеты model, repository, mapper для реализации работы с данными (например, с базой данных).
-- В слое di описываются конфигурации для внедрения зависимостей.
+We will explore the basics of building web applications and using the Spring framework. The project is created once and used for all subsequent tasks.
 
-## Задание 2. Реализация domain-слоя
-- Опиши модель игрового поля в виде целочисленной матрицы.
-- Опиши модель текущей игры, у которой есть UUID и игровое поле.
-- Опиши интерфейс сервиса, у которого есть методы:
-    - метод получения следующего хода текущей игры алгоритмом Минимакс;
-    - метод валидации игрового поля текущей игры (проверь, что не изменены предыдущие ходы);
-    - метод проверки окончания игры.
-- Модели, интерфейсы, реализации должны находиться в разных файлах.
 
-## Задание 3. Реализация datasource-слоя
-- Реализуй класс-хранилище для хранения текущих игр.
-- В качестве средства хранения использовать потокобезопасных коллекций.
-- Опиши модели игрового поля, текущей игры.
-- Реализуй мапперы domain<->datasource.
-- Реализуй репозиторий для работы с классом-хранилищем, у которого есть методы:
-    - метод сохранения текущей игры;
-    - метод получения текущей игры.
-- Создай класс, реализующий интерфейс сервиса и принимающий в качестве параметра репозиторий для работы с классом-хранилищем.
-- Модели, интерфейсы, реализации должны находиться в разных файлах.
+### Task 0. Creating the Project
 
-## Задание 4. Реализация web-слоя
-- Опиши модели игрового поля, текущей игры.
-- Реализуй мапперы domain<->web.
-- Реализуй контроллер с использованием Spring, имеющий метод POST /game/{UUID текущей игры}, который отправляет текущую игру с обновленным игровым полем пользователем и получает в ответ текущую игру с обновленным игровым полем компьютером.
-- Если отправлена некорректная текущая игра с обновленным полем, должна вернуться ошибка с описанием.
-- Должна быть поддержка нескольких игр одновременно.
-- Модели, интерфейсы, реализации должны находиться в разных файлах.
+In IntelliJ IDEA, create a new project:
 
-## Задание 5. Реализация di-слоя
-- Реализуй класс Spring Configuration, в котором описывается граф зависимостей. 
-- Он должен содержать как минимум: 
-   - Класс-хранилище в качестве singleton.
-   - Репозиторий для работы с классом-хранилищем.
-   - Сервис для работы с репозиторием.
+- Select Java as the language.
+- Select Gradle as the build system.
+- Select JDK 18; if you don't have it, download any version of JDK 18.
+- Select Kotlin as the Gradle DSL.
+
+### Task 1. Creating the Project Structure
+
+- Each layer is a separate package.
+- The project structure must include the following layers: web, domain, datasource, di.
+- The web layer must contain at least the packages model, controller, mapper for interaction with the client.
+- The domain layer must include at least the packages model, service for implementing the business logic of the application.
+- The datasource layer must include at least the packages model, repository, mapper for implementing data operations (for example, working with a database).
+- The di layer defines the dependency injection configurations.
+
+### Task 2. Implementing the Domain Layer
+
+- Describe the game board model as an integer matrix.
+- Describe the model of the current game, which has a UUID and a game board.
+- Describe the interface of a service that has the following methods:
+  - A method to get the next move of the current game using the Minimax algorithm.
+  - A method to validate the current game board (check that previous moves haven't been changed).
+  - A method to check if the game has ended.
+- Models, interfaces, and implementations must be in separate files.
+
+### Task 3. Implementing the Datasource Layer
+
+- Implement a storage class to store current games.
+- Use thread-safe collections for data storage.
+- Describe the models of the game board and the current game.
+- Implement domain<->datasource mappers.
+- Implement a repository for working with the storage class; it must have the following methods:
+  - A method to save the current game.
+  - A method to get the current game.
+- Create a class that implements the service interface and accepts the repository (for working with the storage class) as a parameter.
+- Models, interfaces, and implementations must be in separate files.
+
+### Task 4. Implementing the Web Layer
+
+- Describe the models of the game board and the current game.
+- Implement domain<->web mappers.
+- Implement a controller using Spring that has a POST /game/{UUID} method (where {UUID} is the UUID of the current game). This method receives the current game with an updated board from the user and returns the current game with the updated board for the computer's turn.
+- If an invalid current game or updated board is sent, the method should return an error with a description.
+- The application must support multiple games simultaneously.
+- Models, interfaces, and implementations must be in separate files.
+
+### Task 5. Implementing the DI Layer
+
+- Implement a Spring Configuration class that describes the dependency graph.
+- It must contain at least:
+  - The storage class as a singleton;
+  - A repository to work with the storage class.
+  - A service to work with the repository.
+
