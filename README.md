@@ -1,113 +1,115 @@
-# Project Backend 04 — Java_Bootcamp  
+﻿# Project Backend 04 — Java_Bootcamp
 
-Резюме: в этом проекте ты научишься добавлять базы данных в веб-приложения на языке **Java** с использованием Spring и работать с авторизацией.
+**Summary:** In this project, you will learn how to add databases to Java web applications using Spring and work with authorization.
 
-💡 [Нажми сюда](https://new.oprosso.net/p/4cb31ec3f47a4596bc758ea1861fb624), **чтобы поделиться с нами обратной связью на этот проект**. Это анонимно и поможет нашей команде сделать обучение лучше. Рекомендуем заполнить опрос сразу после выполнения проекта.
+💡 *[Click here](https://new.oprosso.net/p/4cb31ec3f47a4596bc758ea1861fb624) to share your feedback on this project.* It’s anonymous and will help our team improve the training. We recommend filling out the survey right after completing the project.
 
-## Содержание
- 1. [Chapter I](#chapter-i)   
-     - [Инструкция](#инструкция)   
- 2. [Chapter II](#chapter-ii)  
-     - [Общая информация](#общая-информация)  
-         - [Авторизация](#авторизация)  
-         - [Идентификация, аутентификация, авторизация](#идентификация-аутентификация-авторизация) 
-         - [Авторизация с помощью логина и пароля](#авторизация-с-помощью-логина-и-пароля) 
- 3. [Chapter III](#chapter-iii)      
-     - [Задание 1. Добавление базы данных](#задание-1-добавление-базы-данных)    
-     - [Задание 2. Добавление авторизации](#задание-2-добавление-авторизации)  
-     - [Задание 3. Добавление логики игры между двумя игроками](#задание-3-добавление-логики-игры-между-двумя-игроками)    
+## Contents**
 
-         
+1. **Chapter I**
+   1. Instructions
+1. **Chapter II**
+   1. General Information
+   1. Authorization
+      1. Identification, Authentication, Authorization
+      1. Authorization via Login and Password
+1. **Chapter III**
+   1. Task 1. Adding a Database
+   1. Task 2. Adding Authorization
+   1. Task 3. Adding Game Logic Between Two Players
+
 ## Chapter I
-## Инструкция
 
-1. На протяжении всего курса тебя будет сопровождать чувство неопределенности и острого дефицита информации — это нормально. Не забывай, что информация в репозитории и Google всегда с тобой. Как и пиры, и Rocket.Chat. Общайся. Ищи. Опирайся на здравый смысл. Не бойся ошибиться.
-2. Будь внимателен к источникам информации. Проверяй. Думай. Анализируй. Сравнивай. 
-3. Внимательно читай задания. Перечитай несколько раз. 
-4. Читать примеры тоже лучше внимательно. В них может быть что-то, что не указано в явном виде в самом задании.
-5. Тебе могут встретиться несоответствия, когда что-то новое в условиях задачи или примере противоречит уже известному. Если встретилось такое — попробуй разобраться. Если не получилось — запиши вопрос в открытые вопросы и выясни в процессе работы. Не оставляй открытые вопросы неразрешенными. 
-6. Если задание кажется непонятным или невыполнимым — так только кажется. Попробуй его декомпозировать. Скорее всего, отдельные части станут понятными. 
-7. На пути тебе встретятся самые разные задания. Те, что помечены звездочкой (\*) — подходят для более дотошных. Они повышенной сложности и не обязательны к выполнению. Но если ты их сделаешь, то получишь дополнительный опыт и знания.
-8. Не пытайся обмануть систему и окружающих. В первую очередь ты обманешь себя.
-9. Есть вопрос? Спроси соседа справа. Если это не помогло — соседа слева.
-10. Когда пользуешься помощью — всегда разбирайся до конца: почему, как и зачем. Иначе помощь не будет иметь смысла.
-11. Всегда делай push только в ветку develop! Ветка master будет проигнорирована. Работай в директории src.
-12. В твоей директории не должно быть иных файлов, кроме тех, что обозначены в заданиях.
+### Instructions
+
+1. Throughout the course, you will experience uncertainty and a severe lack of information — this is normal. Remember that the repository and Google are always available to you, as are your peers and Rocket.Chat. Communicate. Search. Rely on common sense. Do not be afraid of making mistakes.
+1. Pay attention to sources of information. Verify, think, analyze, compare.
+1. Read the assignments carefully. Reread them several times.
+1. It’s best to read the examples carefully as well. They may contain something not explicitly stated in the assignment itself.
+1. You might encounter inconsistencies when something new in the task or example contradicts what you already know. If that happens, try to figure it out. If you fail, make a note under “open questions” and resolve it during your work. Do not leave open questions unresolved.
+1. If a task seems unclear or unachievable, it only seems that way. Try decomposing it. Most likely, individual parts will become clearer.
+1. Along the way, you’ll encounter many different tasks. Those marked with an asterisk (\*) are for more meticulous learners. They are of higher complexity and are not mandatory, but if you do them, you’ll gain additional experience and knowledge.
+1. Do not try to fool the system or those around you. You’ll only be fooling yourself.
+1. Have a question? Ask the neighbor on your right. If that doesn’t help, ask the neighbor on your left.
+1. When using someone’s help, always make sure you understand why, how, and what for. Otherwise, that help is meaningless.
+1. Always push only to the **develop** branch! The **master** branch will be ignored. Work in the **src** directory.
+1. Your directory should not contain any files other than those specified in the tasks.
 
 ## Chapter II
-## Общая информация
 
-### Авторизация
+### General Information
 
-Средства авторизации контролируют доступ легальных пользователей к ресурсам системы, предоставляя каждому из них именно те права, которые ему были определены администратором.
+#### Authorization
 
-### Идентификация, аутентификация, авторизация
+Authorization controls the access of legitimate users to the system's resources, granting each user exactly those privileges assigned by the administrator.
 
-**Идентификация** — процедура, в результате выполнения которой для субъекта выявляется его уникальный признак, однозначно определяющий его в информационной системе.
+#### Identification, Authentication, Authorization
 
-**Аутентификация** — процедура проверки подлинности, например, проверка подлинности пользователя путем сравнения введенного им пароля с паролем, сохраненным в системе.
+- **Identification** is a process by which a subject's unique identifier is established, uniquely defining the subject in the information system.
+- **Authentication** is the process of verifying authenticity. For example, verifying the user by comparing the password entered by the user with the password stored in the system.
+- **Authorization** is the granting of rights to a specific person or group to perform a specific set of actions.
 
-**Авторизация** — предоставление определенному лицу или группе лиц прав на выполнение определенного набора действий.
+#### Authorization via Login and Password**
 
-### Авторизация с помощью логина и пароля
+This method is based on the user providing a login and password for successful identification and authentication in the system. The login/password pair is specified by the user during registration. Upon successful authorization on the server, the user is granted the rights to perform the available requests.
 
-Метод основывается на том, что пользователь должен предоставить логин и пароль для успешной идентификации и аутентификации в системе. Пара логина и пароля задается пользователем при его регистрации в системе. В случае успешной авторизации на сервере пользователю выдаются права на выполнение доступных ему запросов.
+The client sends a request to the server and receives an "Unauthorized" response with information about the authorization procedure. After successful authorization, each subsequent client request automatically includes an "Authorization" header (forming the authorization header), which carries the client's credentials for server authentication.
 
-Клиент отправляет запрос на сервер и получает в виде ответа сообщение «Unauthorized» вместе с информацией о порядке авторизации. После успешного прохождения авторизации в каждый последующий запрос клиента автоматически добавляется заголовок «Authorization» ([формирование заголовка авторизации](https://datatracker.ietf.org/doc/html/rfc7617)), в котором передаются данные клиента для аутентификации сервером.
+There are also other authorization methods.
 
-<div align="center">
-  <img src="misc/images/Auth.png"/>
-</div>
+**Topics to study**:
 
-Существуют и [другие способы авторизации](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#authentication_schemes).
-
-### Темы для изучения:
-- Веб-приложение;
-- Авторизация по паре логина и пароля (basic auth);
+- Web application;
+- Login-password (basic auth) authorization;
 - PostgreSQL;
 - ASP.NET.
 
 ## Chapter III
-### Проект: Крестики-Нолики
-Используй проект для серверной части с предыдущей недели Т03.
 
-## Задание 1. Добавление базы данных
-- Опиши подключение к базе данных PostgreSQL в application.properties.
-- Избавься от класса-хранилища.
-- Добавь специальные аннотации для классов, которые необходимо сохранять в базу данных.
-- Используй у репозиториев в качестве родителя CrudRepository.
+**Project: Tic-Tac-Toe**
 
-## Задание 2. Добавление авторизации
-- Добавь пользователей, у которых будет UUID, логин, пароль.
-- Реализуй поддержку пользователей на всех слоях.
-- Создай модель SignUpRequest, у которой будет логин и пароль.
-- Создай сервис авторизации, который использует UserService:
-    - метод регистрации, который принимает SignUpRequest и возвращает факт успешной регистрации;
-    - метод авторизации, который принимает в заголовке логин и пароль в виде base64(login:password) и возвращает UUID пользователя.
-- Создай контроллер авторизации, у которого будут следующие endpoint'ы:
-    - для регистрации пользователя;
-    - для авторизации пользователя.
-- Создай класс AuthFilter, сделай наследование от GenericFilterBean и реализуй метод doFilter:
-    - Провалидируй логин и пароль.
-    - Если валидация прошла успешно, то выполни запрос.
-    - Если валидация прошла с ошибкой, то добавь в ответ 401 код и не выполняй запрос.
-- Создай Spring Configuration, где:
-    - Опиши Bean для получения SecurityFilterChain.
-    - Разреши доступ без авторизации к endpoint'ам регистрации и авторизации.
-    - Для всех остальных endpoint'ов должна требоваться авторизация.
-    - Воспользуйся AuthFilter в качестве фильтра.
+Use the server-side project from the previous week (T03).
 
-## Задание 3. Добавление логики игры между двумя игроками
-- Добавь состояния для текущей игры:
-    - ожидание игроков;
-    - ход игрока с UUID;
-    - ничья;
-    - победа игрока с UUID.
-- Добавь информацию о значках, которыми будут ходить пользователи, в текущую игру.
-- Улучши алгоритм определения окончания игры с использованием состояний.
-- Добавь endpoint для создания новой игры с пользователем или компьютером.
-- Добавь endpoint для получения доступных текущих игр.
-- Добавь endpoint для присоединения пользователя к игре.
-- Улучши endpoint обновления текущей игры с учетом игры с пользователем или компьютером.
-- Добавь endpoint для получения текущей игры.
-- Добавь endpoint для получения информации о пользователе по UUID.
+### Task 1. Adding a Database
+
+- Describe the PostgreSQL database connection in application.properties.
+- Eliminate the storage-class approach (i.e., get rid of the in-memory storage class).
+- Add special annotations to the classes that need to be stored in the database.
+- In your repositories, use CrudRepository as the parent interface.
+
+### Task 2. Adding Authorization
+
+- Add users, each with a UUID, login, and password.
+- Provide user support across all layers.
+- Create a SignUpRequest model that contains a login and password.
+- Create an authorization service that uses UserService:
+  - a registration method that takes a SignUpRequest and returns a registration success status;
+  - an authorization method that takes the login and password in the header as base64(login:password) and returns the user's UUID.
+- Create an authorization controller with the following endpoints:
+  - for user registration,
+  - for user authorization.
+- Create a class AuthFilter extending GenericFilterBean and implement the doFilter method:
+  - Validate the login and password.
+  - If the validation is successful, proceed with the request.
+  - If the validation fails, add the 401 status code to the response and do not proceed with the request.
+- Create a Spring Configuration class where:
+  - You define a Bean for obtaining SecurityFilterChain.
+  - Allow access without authorization to the registration and authorization endpoints.
+  - All other endpoints require authorization.
+  - Use AuthFilter as a filter.
+
+### Task 3. Adding Game Logic Between Two Players
+
+- Add states for the current game:
+  - Waiting for players;
+  - Turn of the player with the UUID;
+  - Draw;
+  - Win by the player with the UUID.
+- Add information about the tokens (X/O) that users will use in the current game.
+- Improve the game-ending logic using these states.
+- Add an endpoint to create a new game with a user or with a computer.
+- Add an endpoint to get the available current games.
+- Add an endpoint for a user to join a game.
+- Enhance the endpoint for updating the current game to account for playing against another user or against the computer.
+- Add an endpoint to get the current game.
+- Add an endpoint to get user information by UUID.
