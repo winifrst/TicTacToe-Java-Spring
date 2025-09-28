@@ -1,17 +1,20 @@
-package org.tictactoe.datasource.model;
+package org.tictactoe.domain.model;
 
 import java.util.UUID;
 
-public class GameEntity {
+public class Game {
     private UUID id;
     private int[][] board;
     private boolean isPlayerTurn;
 
-    // Конструкторы, геттеры, сеттеры
-    public GameEntity() {}
+    public Game() {
+        this.id = UUID.randomUUID();
+        this.board = new int[3][3];  // пустое поле 3x3
+        this.isPlayerTurn = true;    // игрок ходит первым
+    }
 
+    // Геттеры и сеттеры
     public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
     public int[][] getBoard() { return board; }
     public void setBoard(int[][] board) { this.board = board; }
     public boolean isPlayerTurn() { return isPlayerTurn; }

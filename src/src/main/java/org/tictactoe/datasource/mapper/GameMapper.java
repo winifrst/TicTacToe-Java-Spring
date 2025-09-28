@@ -5,10 +5,14 @@ import org.tictactoe.domain.model.Game;
 
 public class GameMapper {
     public static Game toDomain(GameEntity entity) {
-        // Реализация преобразования
+        Game game = new Game();
+        // установите поля из entity в game
+        return game;
     }
 
     public static GameEntity toEntity(Game domain) {
-        // Реализация преобразования
+        GameEntity entity = new GameEntity();
+        // установите поля из domain в entity
+        return entity;
     }
 }
