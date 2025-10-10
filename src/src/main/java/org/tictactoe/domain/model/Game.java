@@ -9,14 +9,17 @@ public class Game {
 
     public Game() {
         this.id = UUID.randomUUID();
-        this.board = new int[3][3];  // пустое поле 3x3
-        this.isPlayerTurn = true;    // игрок ходит первым
+        this.board = new int[3][3];
+        this.isPlayerTurn = true;
     }
 
     // Геттеры и сеттеры
     public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }  // ← ДОБАВЬТЕ ЭТОТ МЕТОД
+
     public int[][] getBoard() { return board; }
     public void setBoard(int[][] board) { this.board = board; }
+
     public boolean isPlayerTurn() { return isPlayerTurn; }
     public void setPlayerTurn(boolean playerTurn) { isPlayerTurn = playerTurn; }
 }

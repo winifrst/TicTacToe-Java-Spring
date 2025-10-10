@@ -1,15 +1,20 @@
 package org.tictactoe.domain.service;
 
-import org.springframework.stereotype.Service;
+import org.tictactoe.datasource.repository.GameRepository;
 import org.tictactoe.domain.model.Game;
 import org.tictactoe.domain.model.GameStatus;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GameServiceImpl implements GameService {
+    private final GameRepository repository;
+
+    public GameServiceImpl(GameRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public int[] getNextMove(Game game) {
-        // Пока простая логика - ищем первую пустую клетку
         int[][] board = game.getBoard();
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -18,26 +23,46 @@ public class GameServiceImpl implements GameService {
                 }
             }
         }
-        return new int[]{-1, -1};  // нет ходов
+        return new int[]{-1, -1};
     }
+
+//    @Override
+//    public boolean validateBoard(Game game, int[][] newBoard) {
+//        int[][] oldBoard = game.getBoard();
+//        int changes = 0;
+//
+//        for (int i = 0; i < 3; i++) {
+//            for (int j = 0; j < 3; j++) {
+//                if (oldBoard[i][j] != newBoard[i][j]) {
+//                    changes++;
+//                    if (oldBoard[i][j] != 0 || newBoard[i][j] != 1) {
+//                        return false;
+//                    }
+//                }
+//            }
+//        }
+//        return changes == 1;
+//    }
 
     @Override
     public boolean validateBoard(Game game, int[][] newBoard) {
-        int[][] oldBoard = game.getBoard();
-        int changes = 0;
+        // проверяем, что сделан ровно один ход
+        int movesMade = 0;
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (oldBoard[i][j] != newBoard[i][j]) {
-                    changes++;
-                    // Проверяем, что игрок поставил только один символ X (1)
-                    if (oldBoard[i][j] != 0 || newBoard[i][j] != 1) {
+                if (newBoard[i][j] != 0) {
+                    movesMade++;
+                    // Проверяем, что стоит только 1 (игрок) или 2 (компьютер)
+                    if (newBoard[i][j] != 1 && newBoard[i][j] != 2) {
                         return false;
                     }
                 }
             }
         }
-        return changes == 1;  // должно быть ровно одно изменение
+
+        // Для начала игры допускаем 1 ход
+        return movesMade == 1;
     }
 
     @Override
@@ -46,11 +71,9 @@ public class GameServiceImpl implements GameService {
 
         // Проверка строк и столбцов
         for (int i = 0; i < 3; i++) {
-            // Проверка строк
             if (board[i][0] != 0 && board[i][0] == board[i][1] && board[i][1] == board[i][2]) {
                 return board[i][0] == 1 ? GameStatus.PLAYER_WON : GameStatus.COMPUTER_WON;
             }
-            // Проверка столбцов
             if (board[0][i] != 0 && board[0][i] == board[1][i] && board[1][i] == board[2][i]) {
                 return board[0][i] == 1 ? GameStatus.PLAYER_WON : GameStatus.COMPUTER_WON;
             }
@@ -83,9 +106,9 @@ public class GameServiceImpl implements GameService {
         int[] move = getNextMove(game);
         if (move[0] != -1) {
             int[][] newBoard = copyBoard(game.getBoard());
-            newBoard[move[0]][move[1]] = 2;  // компьютер ставит O
+            newBoard[move[0]][move[1]] = 2;
             game.setBoard(newBoard);
-            game.setPlayerTurn(true);  // следующий ход - игрока
+            game.setPlayerTurn(true);
         }
         return game;
     }
