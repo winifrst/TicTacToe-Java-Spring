@@ -17,6 +17,6 @@ public class AppConfig {
 
     @Bean
     public GameService gameService(GameRepository repository) {
-        return new GameServiceImpl(repository);  // теперь конструктор правильный
+        return new GameServiceImpl(repository);
     }
 }
