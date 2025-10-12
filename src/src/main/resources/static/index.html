@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        .cell { width: 50px; height: 50px; border: 1px solid black; text-align: center; font-size: 24px; }
+        .board { display: grid; grid-template-columns: repeat(3, 50px); gap: 2px; margin: 20px; }
+        button { margin: 5px; padding: 10px; }
+    </style>
+</head>
+<body>
+<h1>Крестики-Нолики</h1>
+
+<button onclick="createGame()">Новая игра</button>
+<div id="gameId"></div>
+
+<div class="board" id="board">
+    <div class="cell" onclick="makeMove(0,0)"></div>
+    <div class="cell" onclick="makeMove(0,1)"></div>
+    <div class="cell" onclick="makeMove(0,2)"></div>
+    <div class="cell" onclick="makeMove(1,0)"></div>
+    <div class="cell" onclick="makeMove(1,1)"></div>
+    <div class="cell" onclick="makeMove(1,2)"></div>
+    <div class="cell" onclick="makeMove(2,0)"></div>
+    <div class="cell" onclick="makeMove(2,1)"></div>
+    <div class="cell" onclick="makeMove(2,2)"></div>
+</div>
+
+<div id="status">Создайте игру</div>
+
+<script>
+    let gameId = null;
+    let board = [[0,0,0],[0,0,0],[0,0,0]];
+
+    // Создать новую игру
+    async function createGame() {
+        const response = await fetch('/game/new', { method: 'POST' });
+        const game = await response.json();
+        gameId = game.gameId;
+        board = game.board;
+        document.getElementById('gameId').textContent = 'ID игры: ' + gameId;
+        document.getElementById('status').textContent = 'Ваш ход';
+        updateBoard();
+    }
+
+    // Сделать ход
+    async function makeMove(row, col) {
+        if (!gameId || board[row][col] !== 0) return;
+
+        // Ход игрока
+        board[row][col] = 1;
+        updateBoard();
+
+        // Отправить на сервер
+        const response = await fetch(`/game/${gameId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ board: board })
+        });
+
+        const result = await response.json();
+        board = result.board;
+
+        // Преобразуем статус в читаемый текст
+        const statusText = getStatusText(result.status);
+        document.getElementById('status').textContent = statusText;
+        updateBoard();
+    }
+
+    // Обновить доску
+    function updateBoard() {
+        const cells = document.querySelectorAll('.cell');
+        let index = 0;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                cells[index].textContent =
+                    board[i][j] === 1 ? 'X' :
+                    board[i][j] === 2 ? 'O' : '';
+                index++;
+            }
+        }
+    }
+
+    // Функция для преобразования статусов в читаемый текст
+    function getStatusText(status) {
+        const statusMap = {
+            'IN_PROGRESS': 'Игра продолжается',
+            'PLAYER_WON': 'Вы выиграли! 🎉',
+            'COMPUTER_WON': 'Компьютер выиграл 🤖',
+            'DRAW': 'Ничья!',
+            'NEW_GAME': 'Новая игра',
+            'INVALID_MOVE': 'Неверный ход'
+        };
+
+        return statusMap[status] || status; // Если статус неизвестен - показываем как есть
+    }
+</script>
+</body>
+</html>
