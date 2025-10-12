@@ -59,25 +59,34 @@ public class GameServiceImpl implements GameService {
 //        return changes == 1;
 //    }
 
+
     @Override
     public boolean validateBoard(Game game, int[][] newBoard) {
+//        if (!game.isPlayerTurn()) {
+//            return false;
+//        }
+
         // проверяем, что сделан ровно один ход
         int movesMade = 0;
 
+        int[][] oldBoard = game.getBoard();
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                if (newBoard[i][j] != 0) {
+                if (movesMade > 1) {
+                    return false;
+                }
+
+                if (oldBoard[i][j] != newBoard[i][j]) {
                     movesMade++;
-                    // Проверяем, что стоит только 1 (игрок) или 2 (компьютер)
-                    if (newBoard[i][j] != 1 && newBoard[i][j] != 2) {
+                    if (oldBoard[i][j] != 0 || newBoard[i][j] != 1) {
                         return false;
                     }
                 }
             }
         }
 
-        // Для начала игры допускаем 1 ход
-        return movesMade == 1;
+
+        return (movesMade == 1);
     }
 
     public GameStatus checkGameStatus(Game game) {

@@ -136,13 +136,17 @@ public class GameController {
                 // Новая игра
                 game = new Game();
                 game.setId(gameId);
+//                game = new Game();
+//                game.setId(gameId);
+//                game.setBoard(new int[3][3]);  // ← ЯВНО установить пустое поле!
+//                game.setPlayerTurn(true);      // ← Игрок ходит первым
             } else {
                 // Существующая игра
                 game = GameMapper.toDomain(gameEntity);
             }
 
-            // 2. Временно упрощенная валидация
-            if (!isValidMove(request.getBoard())) {
+            // 2. ВАЛИДАЦИЯ: проверяем корректность хода
+            if (!gameService.validateBoard(game, request.getBoard())) {
                 GameResponse errorResponse = new GameResponse();
                 errorResponse.setStatus("INVALID_MOVE");
                 return ResponseEntity.badRequest().body(errorResponse);
@@ -177,21 +181,21 @@ public class GameController {
         }
     }
 
-    // Упрощенная валидация
-    private boolean isValidMove(int[][] board) {
-        int moves = 0;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (board[i][j] != 0) {
-                    moves++;
-                    if (board[i][j] != 1 && board[i][j] != 2) {
-                        return false; // Только 1 или 2 разрешены
-                    }
-                }
-            }
-        }
-        return moves >= 1; // Хотя бы один ход
-    }
+//    // Упрощенная валидация
+//    private boolean isValidMove(int[][] board) {
+//        int moves = 0;
+//        for (int i = 0; i < 3; i++) {
+//            for (int j = 0; j < 3; j++) {
+//                if (board[i][j] != 0) {
+//                    moves++;
+//                    if (board[i][j] != 1 && board[i][j] != 2) {
+//                        return false; // Только 1 или 2 разрешены
+//                    }
+//                }
+//            }
+//        }
+//        return moves >= 1; // Хотя бы один ход
+//    }
 
     @PostMapping("/new")
     public ResponseEntity<GameResponse> createNewGame() {
