@@ -13,60 +13,12 @@ public class GameServiceImpl implements GameService {
         this.repository = repository;
     }
 
-    //    @Override
-//    public int[] getNextMove(Game game) {
-//        int[][] board = game.getBoard();
-//        for (int i = 0; i < 3; i++) {
-//            for (int j = 0; j < 3; j++) {
-//                if (board[i][j] == 0) {
-//                    return new int[]{i, j};
-//                }
-//            }
-//        }
-//        return new int[]{-1, -1};
-//    }
-//    @Override
-//    public int[] getNextMove(Game game) {
-//        // TODO: Заменить на Minimal алгоритм
-//        // Вместо поиска первой пустой клетки
-//        // Нужно анализировать лучший ход
-//
-//        return findBestMove(game.getBoard());
-//    }
-
-//    private int[] findBestMove(int[][] board) {
-//        // Здесь будет сложная логика Minimal
-//        // Анализ всех возможных ходов
-//        // Выбор оптимального
-//        return new int[]{0, 0};
-//    }
-
-//    @Override
-//    public boolean validateBoard(Game game, int[][] newBoard) {
-//        int[][] oldBoard = game.getBoard();
-//        int changes = 0;
-//
-//        for (int i = 0; i < 3; i++) {
-//            for (int j = 0; j < 3; j++) {
-//                if (oldBoard[i][j] != newBoard[i][j]) {
-//                    changes++;
-//                    if (oldBoard[i][j] != 0 || newBoard[i][j] != 1) {
-//                        return false;
-//                    }
-//                }
-//            }
-//        }
-//        return changes == 1;
-//    }
-
-
     @Override
     public boolean validateBoard(Game game, int[][] newBoard) {
 //        if (!game.isPlayerTurn()) {
 //            return false;
 //        }
 
-        // проверяем, что сделан ровно один ход
         int movesMade = 0;
 
         int[][] oldBoard = game.getBoard();

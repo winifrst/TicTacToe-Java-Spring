@@ -34,7 +34,6 @@
     let gameId = null;
     let board = [[0,0,0],[0,0,0],[0,0,0]];
 
-    // Создать новую игру
     async function createGame() {
         const response = await fetch('/game/new', { method: 'POST' });
         const game = await response.json();
@@ -45,15 +44,12 @@
         updateBoard();
     }
 
-    // Сделать ход
     async function makeMove(row, col) {
         if (!gameId || board[row][col] !== 0) return;
 
-        // Ход игрока
         board[row][col] = 1;
         updateBoard();
 
-        // Отправить на сервер
         const response = await fetch(`/game/${gameId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -63,13 +59,11 @@
         const result = await response.json();
         board = result.board;
 
-        // Преобразуем статус в читаемый текст
         const statusText = getStatusText(result.status);
         document.getElementById('status').textContent = statusText;
         updateBoard();
     }
 
-    // Обновить доску
     function updateBoard() {
         const cells = document.querySelectorAll('.cell');
         let index = 0;
@@ -83,18 +77,17 @@
         }
     }
 
-    // Функция для преобразования статусов в читаемый текст
     function getStatusText(status) {
         const statusMap = {
             'IN_PROGRESS': 'Игра продолжается',
-            'PLAYER_WON': 'Вы выиграли! 🎉',
-            'COMPUTER_WON': 'Компьютер выиграл 🤖',
+            'PLAYER_WON': 'Вы выиграли!',
+            'COMPUTER_WON': 'Компьютер выиграл',
             'DRAW': 'Ничья!',
             'NEW_GAME': 'Новая игра',
             'INVALID_MOVE': 'Неверный ход'
         };
 
-        return statusMap[status] || status; // Если статус неизвестен - показываем как есть
+        return statusMap[status] || status;
     }
 </script>
 </body>

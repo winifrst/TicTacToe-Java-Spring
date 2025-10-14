@@ -7,7 +7,6 @@ public class GameEntity {
     private int[][] board;
     private boolean isPlayerTurn;
 
-    // Конструкторы
     public GameEntity() {}
 
     public GameEntity(UUID id, int[][] board, boolean isPlayerTurn) {
@@ -16,7 +15,6 @@ public class GameEntity {
         this.isPlayerTurn = isPlayerTurn;
     }
 
-    // Геттеры и сеттеры
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 

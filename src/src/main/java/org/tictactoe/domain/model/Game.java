@@ -13,13 +13,27 @@ public class Game {
         this.isPlayerTurn = true;
     }
 
-    // Геттеры и сеттеры
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }  // ← ДОБАВЬТЕ ЭТОТ МЕТОД
+    public UUID getId() {
+        return id;
+    }
 
-    public int[][] getBoard() { return board; }
-    public void setBoard(int[][] board) { this.board = board; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-    public boolean isPlayerTurn() { return isPlayerTurn; }
-    public void setPlayerTurn(boolean playerTurn) { isPlayerTurn = playerTurn; }
+    public int[][] getBoard() {
+        return board;
+    }
+
+    public void setBoard(int[][] board) {
+        this.board = board;
+    }
+
+    public boolean isPlayerTurn() {
+        return isPlayerTurn;
+    }
+
+    public void setPlayerTurn(boolean playerTurn) {
+        isPlayerTurn = playerTurn;
+    }
 }

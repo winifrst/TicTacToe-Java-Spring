@@ -5,7 +5,6 @@ public class GameResponse {
     private int[][] board;
     private String status;
 
-    // Геттеры и сеттеры
     public String getGameId() {
         return gameId;
     }
