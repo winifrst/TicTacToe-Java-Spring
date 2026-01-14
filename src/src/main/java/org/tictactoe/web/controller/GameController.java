@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import static org.tictactoe.domain.service.Constants.BOARD_SIZE;
+
 @RestController
 @RequestMapping("/game")
 public class GameController {
@@ -75,12 +77,12 @@ public class GameController {
 
         GameEntity newGame = new GameEntity();
         newGame.setId(gameId);
-        newGame.setBoard(new int[3][3]);
+        newGame.setBoard(new int[BOARD_SIZE][BOARD_SIZE]);
         gameRepository.save(newGame);
 
         GameResponse response = new GameResponse();
         response.setGameId(gameId.toString());
-        response.setBoard(new int[3][3]);
+        response.setBoard(new int[BOARD_SIZE][BOARD_SIZE]);
         response.setStatus("NEW_GAME");
 
         return ResponseEntity.ok(response);

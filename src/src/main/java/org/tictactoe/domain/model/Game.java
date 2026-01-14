@@ -2,6 +2,8 @@ package org.tictactoe.domain.model;
 
 import java.util.UUID;
 
+import static org.tictactoe.domain.service.Constants.*;
+
 public class Game {
     private UUID id;
     private int[][] board;
@@ -9,7 +11,7 @@ public class Game {
 
     public Game() {
         this.id = UUID.randomUUID();
-        this.board = new int[3][3];
+        this.board = new int[BOARD_SIZE][BOARD_SIZE];
         this.isPlayerTurn = true;
     }
 
