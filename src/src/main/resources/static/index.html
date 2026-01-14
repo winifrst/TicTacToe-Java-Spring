@@ -3,11 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic Tac Toe</title>
+    <title>Крестики-Нолики</title>
     <style>
-        .cell { width: 50px; height: 50px; border: 1px solid black; text-align: center; font-size: 24px; }
-        .board { display: grid; grid-template-columns: repeat(3, 50px); gap: 2px; margin: 20px; }
-        button { margin: 5px; padding: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .cell:hover {
+            background-color: #f0f0f0;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .x {
+            color: #f44336; /* Красный для X */
+        }
+
+        .o {
+            color: #2196F3; /* Синий для O */
+        }
+
+        .winner {
+            background-color: #4CAF50;
+            color: white;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        #status {
+            font-size: 20px;
+            margin: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -33,12 +101,14 @@
 <script>
     let gameId = null;
     let board = [[0,0,0],[0,0,0],[0,0,0]];
+    let winnerCells = [];
 
     async function createGame() {
         const response = await fetch('/game/new', { method: 'POST' });
         const game = await response.json();
         gameId = game.gameId;
         board = game.board;
+        winnerCells = [];
         document.getElementById('gameId').textContent = 'ID игры: ' + gameId;
         document.getElementById('status').textContent = 'Ваш ход';
         updateBoard();
@@ -58,6 +128,7 @@
 
         const result = await response.json();
         board = result.board;
+        winnerCells = result.winnerCells || [];
 
         const statusText = getStatusText(result.status);
         document.getElementById('status').textContent = statusText;
@@ -69,9 +140,22 @@
         let index = 0;
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
-                cells[index].textContent =
-                    board[i][j] === 1 ? 'X' :
-                    board[i][j] === 2 ? 'O' : '';
+                const cell = cells[index];
+                cell.className = 'cell';
+                if (board[i][j] === 1) {
+                    cell.textContent = 'X';
+                    cell.classList.add('x');
+                } else if (board[i][j] === 2) {
+                    cell.textContent = 'O';
+                    cell.classList.add('o');
+                } else {
+                    cell.textContent = '';
+                }
+
+                if (winnerCells.some(wc => wc.row === i && wc.col === j)) {
+                    cell.classList.add('winner');
+                }
+
                 index++;
             }
         }
