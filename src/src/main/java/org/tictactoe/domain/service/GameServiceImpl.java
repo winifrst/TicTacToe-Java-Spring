@@ -18,9 +18,28 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean validateBoard(Game game, int[][] newBoard) {
-//        if (!game.isPlayerTurn()) {
-//            return false;
-//        }
+        if (newBoard == null) {
+            return false;
+        }
+
+        if (newBoard.length != BOARD_SIZE) {
+            return false;
+        }
+
+        for (int i = 0; i < newBoard.length; i++) {
+            if (newBoard[i] == null || newBoard[i].length != BOARD_SIZE) {
+                return false;
+            }
+        }
+
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                int cellValue = newBoard[i][j];
+                if (cellValue != EMPTY && cellValue != PLAYER && cellValue != COMPUTER) {
+                    return false;
+                }
+            }
+        }
 
         int movesMade = 0;
 
@@ -39,7 +58,6 @@ public class GameServiceImpl implements GameService {
                 }
             }
         }
-
 
         return (movesMade == 1);
     }
@@ -186,7 +204,7 @@ public class GameServiceImpl implements GameService {
     private int[][] copyBoard(int[][] board) {
         int[][] newBoard = new int[BOARD_SIZE][BOARD_SIZE];
         for (int i = 0; i < BOARD_SIZE; i++) {
-            System.arraycopy(board[i], 0, newBoard[i], 0, 3);
+            System.arraycopy(board[i], 0, newBoard[i], 0, BOARD_SIZE);
         }
         return newBoard;
     }
