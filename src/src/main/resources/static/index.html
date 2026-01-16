@@ -82,7 +82,8 @@
 <h1>Крестики-Нолики</h1>
 
 <button onclick="createGame()">Новая игра</button>
-<div id="gameId"></div>
+<!--<div id="gameId"></div>-->
+<div id="gameId" style="cursor: pointer; color: blue; text-decoration: underline;" onclick="copyGameIdToClipboard()"></div>
 
 <div class="board" id="board">
     <div class="cell" onclick="makeMove(0,0)"></div>
@@ -173,6 +174,36 @@
 
         return statusMap[status] || status;
     }
+
+        async function createGame() {
+        const response = await fetch('/game/new', { method: 'POST' });
+        const game = await response.json();
+        gameId = game.gameId;
+        board = game.board;
+        winnerCells = [];
+        document.getElementById('gameId').textContent = 'ID игры: ' + gameId;
+        document.getElementById('status').textContent = 'Ваш ход';
+        updateBoard();
+    }
+
+    function copyGameIdToClipboard() {
+        const gameIdText = document.getElementById('gameId').textContent;
+        const idOnly = gameIdText.replace('ID игры: ', '').trim(); // Извлекаем только ID
+
+        navigator.clipboard.writeText(idOnly)
+            .then(() => {
+                const originalText = document.getElementById('gameId').textContent;
+                document.getElementById('gameId').textContent = 'Скопировано!';
+                setTimeout(() => {
+                    document.getElementById('gameId').textContent = originalText;
+                }, 1500); // Возвращаем исходный текст через 1.5 секунды
+            })
+            .catch(err => {
+                console.error('Не удалось скопировать: ', err);
+                alert('Не удалось скопировать ID игры. Попробуйте ещё раз.');
+            });
+    }
 </script>
 </body>
 </html>
+
