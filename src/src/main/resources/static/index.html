@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-Нолики</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .cell:hover {
+            background-color: #f0f0f0;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .x {
+            color: #f44336; /* Красный для X */
+        }
+
+        .o {
+            color: #2196F3; /* Синий для O */
+        }
+
+        .winner {
+            background-color: #4CAF50;
+            color: white;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        #status {
+            font-size: 20px;
+            margin: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h1>Крестики-Нолики</h1>
+
+<button onclick="createGame()">Новая игра</button>
+<!--<div id="gameId"></div>-->
+<div id="gameId" style="cursor: pointer; color: blue; text-decoration: underline;" onclick="copyGameIdToClipboard()"></div>
+
+<div class="board" id="board">
+    <div class="cell" onclick="makeMove(0,0)"></div>
+    <div class="cell" onclick="makeMove(0,1)"></div>
+    <div class="cell" onclick="makeMove(0,2)"></div>
+    <div class="cell" onclick="makeMove(1,0)"></div>
+    <div class="cell" onclick="makeMove(1,1)"></div>
+    <div class="cell" onclick="makeMove(1,2)"></div>
+    <div class="cell" onclick="makeMove(2,0)"></div>
+    <div class="cell" onclick="makeMove(2,1)"></div>
+    <div class="cell" onclick="makeMove(2,2)"></div>
+</div>
+
+<div id="status">Создайте игру</div>
+
+<script>
+    let gameId = null;
+    let board = [[0,0,0],[0,0,0],[0,0,0]];
+    let winnerCells = [];
+
+    async function createGame() {
+        const response = await fetch('/game/new', { method: 'POST' });
+        const game = await response.json();
+        gameId = game.gameId;
+        board = game.board;
+        winnerCells = [];
+        document.getElementById('gameId').textContent = 'ID игры: ' + gameId;
+        document.getElementById('status').textContent = 'Ваш ход';
+        updateBoard();
+    }
+
+    async function makeMove(row, col) {
+        if (!gameId || board[row][col] !== 0) return;
+
+        board[row][col] = 1;
+        updateBoard();
+
+        const response = await fetch(`/game/${gameId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ board: board })
+        });
+
+        const result = await response.json();
+        board = result.board;
+        winnerCells = result.winnerCells || [];
+
+        const statusText = getStatusText(result.status);
+        document.getElementById('status').textContent = statusText;
+        updateBoard();
+    }
+
+    function updateBoard() {
+        const cells = document.querySelectorAll('.cell');
+        let index = 0;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                const cell = cells[index];
+                cell.className = 'cell';
+                if (board[i][j] === 1) {
+                    cell.textContent = 'X';
+                    cell.classList.add('x');
+                } else if (board[i][j] === 2) {
+                    cell.textContent = 'O';
+                    cell.classList.add('o');
+                } else {
+                    cell.textContent = '';
+                }
+
+                if (winnerCells.some(wc => wc.row === i && wc.col === j)) {
+                    cell.classList.add('winner');
+                }
+
+                index++;
+            }
+        }
+    }
+
+    function getStatusText(status) {
+        const statusMap = {
+            'IN_PROGRESS': 'Игра продолжается',
+            'PLAYER_WON': 'Вы выиграли!',
+            'COMPUTER_WON': 'Компьютер выиграл',
+            'DRAW': 'Ничья!',
+            'NEW_GAME': 'Новая игра',
+            'INVALID_MOVE': 'Неверный ход'
+        };
+
+        return statusMap[status] || status;
+    }
+
+        async function createGame() {
+        const response = await fetch('/game/new', { method: 'POST' });
+        const game = await response.json();
+        gameId = game.gameId;
+        board = game.board;
+        winnerCells = [];
+        document.getElementById('gameId').textContent = 'ID игры: ' + gameId;
+        document.getElementById('status').textContent = 'Ваш ход';
+        updateBoard();
+    }
+
+    function copyGameIdToClipboard() {
+        const gameIdText = document.getElementById('gameId').textContent;
+        const idOnly = gameIdText.replace('ID игры: ', '').trim(); // Извлекаем только ID
+
+        navigator.clipboard.writeText(idOnly)
+            .then(() => {
+                const originalText = document.getElementById('gameId').textContent;
+                document.getElementById('gameId').textContent = 'Скопировано!';
+                setTimeout(() => {
+                    document.getElementById('gameId').textContent = originalText;
+                }, 1500); // Возвращаем исходный текст через 1.5 секунды
+            })
+            .catch(err => {
+                console.error('Не удалось скопировать: ', err);
+                alert('Не удалось скопировать ID игры. Попробуйте ещё раз.');
+            });
+    }
+</script>
+</body>
+</html>
+
