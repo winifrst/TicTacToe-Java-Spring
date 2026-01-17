@@ -103,6 +103,7 @@ import org.tictactoe.web.model.GameResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.tictactoe.domain.service.Constants.BOARD_SIZE;
@@ -122,14 +123,25 @@ public class GameController {
     @PostMapping("/{gameId}")
     public ResponseEntity<GameResponse> makeMove(@PathVariable UUID gameId, @RequestBody GameRequest request) {
         try {
-            GameEntity gameEntity = gameRepository.findById(gameId);  // Получаем или создаём игру
+            Optional<GameEntity> gameEntityOptional = gameRepository.findById(gameId);  // Получаем или создаём игру
             Game game;
 
-            if (gameEntity == null) {
-                game = WebGameMapper.toDomainFromRequest(request, gameId);
+//            if (gameEntity == null) {
+//                game = WebGameMapper.toDomainFromRequest(request, gameId);
+//            } else {
+//                game = GameMapper.toDomain(gameEntity);
+//            }
+
+            if (gameEntityOptional.isEmpty()) {
+                game = new Game();
+                game.setId(gameId);
+                game.setBoard(new int[BOARD_SIZE][BOARD_SIZE]);
+                game.setPlayerTurn(true);
             } else {
+                GameEntity gameEntity = gameEntityOptional.get();
                 game = GameMapper.toDomain(gameEntity);
             }
+
 
             if (!gameService.validateBoard(game, request.getBoard())) {  // проверяем корректность хода
                 GameResponse errorResponse = WebGameMapper.toErrorResponse("INVALID_MOVE");
@@ -144,7 +156,7 @@ public class GameController {
                 status = gameService.checkGameStatus(game);
             }
 
-            gameEntity = GameMapper.toEntity(game);  // сохраняем игру
+            GameEntity gameEntity = GameMapper.toEntity(game);  // сохраняем игру
             gameRepository.save(gameEntity);
 
             GameResponse response = WebGameMapper.toResponseFromDomain(game, status);  // используем уродский маппер
@@ -163,7 +175,7 @@ public class GameController {
 
         GameEntity newGame = new GameEntity();
         newGame.setId(gameId);
-        newGame.setBoard(new int[BOARD_SIZE][BOARD_SIZE]);
+        newGame.setBoard("0,0,0,0,0,0,0,0,0");
         gameRepository.save(newGame);
 
         GameResponse response = WebGameMapper.toNewGameResponse(gameId);  // используем уродский маппер

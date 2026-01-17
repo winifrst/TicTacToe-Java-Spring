@@ -35,7 +35,7 @@ public class GameServiceImpl implements GameService {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 int cellValue = newBoard[i][j];
-                if (cellValue != EMPTY && cellValue != PLAYER && cellValue != COMPUTER) {
+                if (cellValue != EMPTY && cellValue != FIRST_PLAYER && cellValue != SECOND_PLAYER) {
                     return false;
                 }
             }
@@ -70,23 +70,23 @@ public class GameServiceImpl implements GameService {
         // Проверка строк
         for (int i = 0; i < BOARD_SIZE; i++) {
             if (board[i][0] != 0 && board[i][0] == board[i][1] && board[i][1] == board[i][2]) {
-                return board[i][0] == PLAYER ? GameStatus.PLAYER_WON : GameStatus.COMPUTER_WON;
+                return board[i][0] == FIRST_PLAYER ? GameStatus.FIRST_PLAYER_WON : GameStatus.SECOND_PLAYER_WON;
             }
         }
 
         // Проверка столбцов
         for (int j = 0; j < BOARD_SIZE; j++) {
             if (board[0][j] != 0 && board[0][j] == board[1][j] && board[1][j] == board[2][j]) {
-                return board[0][j] == PLAYER ? GameStatus.PLAYER_WON : GameStatus.COMPUTER_WON;
+                return board[0][j] == FIRST_PLAYER ? GameStatus.FIRST_PLAYER_WON : GameStatus.SECOND_PLAYER_WON;
             }
         }
 
         // Проверка диагоналей
         if (board[0][0] != 0 && board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
-            return board[0][0] == PLAYER ? GameStatus.PLAYER_WON : GameStatus.COMPUTER_WON;
+            return board[0][0] == FIRST_PLAYER ? GameStatus.FIRST_PLAYER_WON : GameStatus.SECOND_PLAYER_WON;
         }
         if (board[0][2] != 0 && board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
-            return board[0][2] == PLAYER ? GameStatus.PLAYER_WON : GameStatus.COMPUTER_WON;
+            return board[0][2] == FIRST_PLAYER ? GameStatus.FIRST_PLAYER_WON : GameStatus.SECOND_PLAYER_WON;
         }
 
         // Проверка на ничью
@@ -105,8 +105,8 @@ public class GameServiceImpl implements GameService {
         GameStatus status = checkBoardStatus(board);
 
         // Базовые случаи рекурсии
-        if (status == GameStatus.COMPUTER_WON) return 10 - depth;  // Компьютер выиграл
-        if (status == GameStatus.PLAYER_WON) return depth - 10;    // Игрок выиграл
+        if (status == GameStatus.SECOND_PLAYER_WON) return 10 - depth;  // Компьютер выиграл
+        if (status == GameStatus.FIRST_PLAYER_WON) return depth - 10;    // Игрок выиграл
         if (status == GameStatus.DRAW) return 0;                   // Ничья
 
         if (isMaximizing) {
@@ -116,7 +116,7 @@ public class GameServiceImpl implements GameService {
             for (int i = 0; i < BOARD_SIZE; i++) {
                 for (int j = 0; j < BOARD_SIZE; j++) {
                     if (board[i][j] == EMPTY) {
-                        board[i][j] = COMPUTER;
+                        board[i][j] = SECOND_PLAYER;
                         int score = minimax(board, depth + 1, false);  // Рекурсия!
                         board[i][j] = EMPTY;     // Отмена хода
 
@@ -133,7 +133,7 @@ public class GameServiceImpl implements GameService {
             for (int i = 0; i < BOARD_SIZE; i++) {
                 for (int j = 0; j < BOARD_SIZE; j++) {
                     if (board[i][j] == EMPTY) {
-                        board[i][j] = PLAYER;
+                        board[i][j] = FIRST_PLAYER;
                         int score = minimax(board, depth + 1, true);   // Рекурсия!
                         board[i][j] = EMPTY;
 
@@ -156,7 +156,7 @@ public class GameServiceImpl implements GameService {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 if (board[i][j] == EMPTY) {
                     // Пробуем ход
-                    board[i][j] = COMPUTER;
+                    board[i][j] = SECOND_PLAYER;
 
                     // Оцениваем этот ход рекурсивно
                     int score = minimax(board, 0, false);
@@ -187,7 +187,7 @@ public class GameServiceImpl implements GameService {
             int[][] newBoard = copyBoard(game.getBoard());
 
             // Ставим ход компьютера
-            newBoard[move[0]][move[1]] = 2;
+            newBoard[move[0]][move[1]] = SECOND_PLAYER;
 
             // 4. Обновляем игру
             game.setBoard(newBoard);

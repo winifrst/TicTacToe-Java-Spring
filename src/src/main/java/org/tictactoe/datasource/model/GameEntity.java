@@ -1,26 +1,58 @@
 package org.tictactoe.datasource.model;
 
+//import jakarta.persistence.Entity;
+//import org.jetbrains.kotlin.com.google.common.collect.Table;
+
+import jakarta.persistence.*;
+//import jakarta.persistence.Entity;
+//import jakarta.persistence.Id;
+//import jakarta.persistence.Table;
+
 import java.util.UUID;
 
+@Entity
+@Table(name = "games")
 public class GameEntity {
+
+    @Id
     private UUID id;
-    private int[][] board;
-    private boolean isPlayerTurn;
 
-    public GameEntity() {}
+    @Column(name = "board")
+    private String board;
 
-    public GameEntity(UUID id, int[][] board, boolean isPlayerTurn) {
-        this.id = id;
-        this.board = board;
-        this.isPlayerTurn = isPlayerTurn;
+    @Column(name = "player_turn")
+    private boolean isPlayer1Turn;
+
+    public GameEntity() {
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public GameEntity(UUID id, String board, boolean isPlayerTurn) {
+        this.id = id;
+        this.board = board;
+        this.isPlayer1Turn = isPlayerTurn;
+    }
 
-    public int[][] getBoard() { return board; }
-    public void setBoard(int[][] board) { this.board = board; }
+    public UUID getId() {
+        return id;
+    }
 
-    public boolean isPlayerTurn() { return isPlayerTurn; }
-    public void setPlayerTurn(boolean playerTurn) { isPlayerTurn = playerTurn; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getBoard() {
+        return board;
+    }
+
+    public void setBoard(String board) {
+        this.board = board;
+    }
+
+    public boolean isPlayer1Turn() {
+        return isPlayer1Turn;
+    }
+
+    public void setPlayerTurn(boolean playerTurn) {
+        isPlayer1Turn = playerTurn;
+    }
 }
