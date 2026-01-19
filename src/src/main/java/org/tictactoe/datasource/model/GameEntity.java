@@ -23,6 +23,15 @@ public class GameEntity {
     @Column(name = "player_turn")
     private boolean isPlayer1Turn;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "user_id")
+//    private UserEntity user;
+
+
     public GameEntity() {
     }
 
@@ -44,6 +53,8 @@ public class GameEntity {
         return board;
     }
 
+    public UserEntity getUser() { return user; }
+
     public void setBoard(String board) {
         this.board = board;
     }
@@ -55,4 +66,6 @@ public class GameEntity {
     public void setPlayerTurn(boolean playerTurn) {
         isPlayer1Turn = playerTurn;
     }
+
+    public void setUser(UserEntity user) { this.user = user; }
 }

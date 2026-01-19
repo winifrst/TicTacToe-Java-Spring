@@ -8,6 +8,8 @@ public class Game {
     private UUID id;
     private int[][] board;
     private boolean isPlayerTurn;
+    private UUID userId;
+
 
     public Game() {
         this.id = UUID.randomUUID();
@@ -27,6 +29,8 @@ public class Game {
         return board;
     }
 
+    public UUID getUserId() { return userId; }
+
     public void setBoard(int[][] board) {
         this.board = board;
     }
@@ -38,4 +42,6 @@ public class Game {
     public void setPlayerTurn(boolean playerTurn) {
         isPlayerTurn = playerTurn;
     }
+
+    public void setUserId(UUID userId) { this.userId = userId; }
 }

@@ -17,9 +17,23 @@ repositories {
 }
 
 dependencies {
+
+    // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.postgresql:postgresql")
+//    implementation("org.springframework.boot:spring-boot-starter-web")
+//    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    // Spring Security для авторизации
+//    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // База данных
+    runtimeOnly("org.postgresql:postgresql")  // runtimeOnly вместо implementation
+    //    implementation("org.postgresql:postgresql")
+
     implementation("org.springframework.boot:spring-boot-starter") // Явное подключение Spring Core
-    testImplementation("org.springframework.boot:springs-boot-starter-test")
+
+//    // Тестирование
+//    testImplementation("org.springframework.boot:spring-boot-starter-test")
+//    testImplementation("org.springframework.security:spring-security-test") // Для тестов безопасности
 }
