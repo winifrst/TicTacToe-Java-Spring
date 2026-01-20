@@ -1,44 +1,51 @@
 {
 	"info": {
-		"_postman_id": "11e40d78-830f-4de2-bd84-645a815f9e16",
-		"name": "TicTacToe_1",
+		"_postman_id": "7065756f-d105-4ae7-8a3d-ba33378c30fa",
+		"name": "TicTacToe_2",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "50481283",
-		"_collection_link": "https://winifrst-5be2859a-2822992.postman.co/workspace/%D0%9F%D0%B5%D1%82%D1%80-%D0%A1%D1%83%D0%B2%D0%BE%D1%80%D0%B8%D0%BD's-Workspace~cb1f4236-e40b-4552-82ae-fa62713b6f58/collection/50481283-11e40d78-830f-4de2-bd84-645a815f9e16?action=share&source=collection_link&creator=50481283"
+		"_collection_link": "https://winifrst-5be2859a-2822992.postman.co/workspace/%D0%9F%D0%B5%D1%82%D1%80-%D0%A1%D1%83%D0%B2%D0%BE%D1%80%D0%B8%D0%BD's-Workspace~cb1f4236-e40b-4552-82ae-fa62713b6f58/collection/50481283-7065756f-d105-4ae7-8a3d-ba33378c30fa?action=share&source=collection_link&creator=50481283"
 	},
 	"item": [
 		{
-			"name": "New game",
+			"name": "Register",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// Проверяем успешный ответ",
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
 							"",
-							"// Проверяем структуру ответа",
-							"pm.test(\"Response has correct structure\", function () {",
-							"    const response = pm.response.json();",
-							"    ",
-							"    pm.expect(response).to.have.property(\"gameId\");",
-							"    pm.expect(response).to.have.property(\"board\");",
-							"    pm.expect(response).to.have.property(\"status\");",
-							"    ",
-							"    pm.expect(response.status).to.equal(\"NEW_GAME\");",
-							"    pm.expect(response.board).to.be.an(\"array\").with.lengthOf(3);",
-							"    pm.expect(response.board[0]).to.be.an(\"array\").with.lengthOf(3);",
-							"});",
+							"// Создаем Base64",
+							"const username = pm.environment.get(\"username\");",
+							"const password = pm.environment.get(\"password\");",
+							"const credentials = btoa(`${username}:${password}`);",
 							"",
-							"// Сохраняем UUID игры для последующих тестов",
-							"pm.test(\"Save game ID for future tests\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.environment.set(\"game_id\", response.gameId);",
-							"    ",
-							"    console.log(\"Game ID saved: \" + response.gameId);",
-							"});"
+							"// Сохраняем для следующих запросов",
+							"pm.environment.set(\"authHeader\", `Basic ${credentials}`);",
+							"console.log(\"Credentials saved for:\", username);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Генерируем уникальное имя пользователя",
+							"const timestamp = Date.now();",
+							"const username = `user_${timestamp}`;",
+							"const password = `password123_${timestamp}`;",
+							"",
+							"// Сохраняем в переменные",
+							"pm.environment.set(\"username\", username);",
+							"pm.environment.set(\"password\", password);",
+							"",
+							"console.log(\"Generated user:\", username);"
 						],
 						"type": "text/javascript",
 						"packages": {},
@@ -49,10 +56,189 @@
 			"request": {
 				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "{{base_url}}/game/new",
+					"raw": "{{baseUrl}}/auth/signup",
 					"host": [
-						"{{base_url}}"
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New auth",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Has user ID\", () => {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json.id).to.not.be.null;",
+							"    pm.expect(json.message).to.include(\"successful\");",
+							"    pm.environment.set(\"userId\", json.id);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "key",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "value",
+							"value": "",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authHeader}}",
+						"type": "text"
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New game",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"console.log(\"=== DEBUG NEW GAME REQUEST ===\");",
+							"",
+							"// 1. Проверяем переменные окружения",
+							"console.log(\"Environment variables:\");",
+							"console.log(\"authHeader =\", pm.environment.get(\"authHeader\"));",
+							"console.log(\"username =\", pm.environment.get(\"username\"));",
+							"console.log(\"password =\", pm.environment.get(\"password\"));",
+							"console.log(\"userId =\", pm.environment.get(\"userId\"));",
+							"",
+							"// 2. Проверяем заголовки, которые будут отправлены",
+							"console.log(\"\\nRequest headers:\");",
+							"const headers = pm.request.headers;",
+							"headers.each(header => {",
+							"    if (header.key === \"Authorization\") {",
+							"        console.log(`${header.key}: ${header.value}`);",
+							"        ",
+							"        // Декодируем Base64 для проверки",
+							"        const authValue = header.value;",
+							"        if (authValue && authValue.startsWith(\"Basic \")) {",
+							"            const base64Part = authValue.substring(6);",
+							"            try {",
+							"                const decoded = atob(base64Part);",
+							"                console.log(\"Decoded credentials:\", decoded);",
+							"                const [user, pass] = decoded.split(\":\");",
+							"                console.log(\"Username from header:\", user);",
+							"                console.log(\"Password from header:\", pass);",
+							"            } catch (e) {",
+							"                console.log(\"Error decoding Base64:\", e.message);",
+							"            }",
+							"        }",
+							"    }",
+							"});",
+							"",
+							"// 3. Проверяем URL",
+							"console.log(\"\\nRequest URL:\", pm.request.url.toString());"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Game created\", () => {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json.gameId).to.not.be.null;",
+							"    pm.expect(json.status).to.equal(\"NEW_GAME\");",
+							"    pm.expect(json.board).to.eql([[0,0,0],[0,0,0],[0,0,0]]);",
+							"    pm.environment.set(\"gameId\", json.gameId);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authHeader}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/game/new",
+					"host": [
+						"{{baseUrl}}"
 					],
 					"path": [
 						"game",
@@ -63,98 +249,14 @@
 			"response": []
 		},
 		{
-			"name": "Post with 4x4 field",
+			"name": "New turn",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// Проверяем ошибку сервера",
-							"pm.test(\"Status code is 400\", function () {",
-							"    pm.response.to.have.status(400);",
-							"});",
-							"",
-							"pm.test(\"Returns error for invalid UUID\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.status).to.include(\"ERROR\");",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "  {\n    \"board\": [\n      [1, 0, 0, 0],\n      [0, 0, 0, 0],\n      [0, 0, 0, 0],\n      [0, 0, 0, 0]\n    ]\n  }",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/game/{{game_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"game",
-						"{{game_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "First turn",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Проверяем успешный ответ",
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"// Проверяем, что компьютер сделал ответный ход",
-							"pm.test(\"Computer made a move\", function () {",
-							"    const response = pm.response.json();",
-							"    ",
-							"    pm.expect(response.status).to.be.oneOf([\"IN_PROGRESS\", \"COMPUTER_WON\", \"PLAYER_WON\", \"DRAW\"]);",
-							"    ",
-							"    // Проверяем, что на доске есть ход компьютера (2)",
-							"    let computerMoves = 0;",
-							"    for (let i = 0; i < 3; i++) {",
-							"        for (let j = 0; j < 3; j++) {",
-							"            if (response.board[i][j] === 2) {",
-							"                computerMoves++;",
-							"            }",
-							"        }",
-							"    }",
-							"    ",
-							"    // Компьютер должен был сделать ход если игра не закончилась",
-							"    if (response.status === \"IN_PROGRESS\") {",
-							"        pm.expect(computerMoves).to.equal(1);",
-							"    }",
-							"});",
-							"",
-							"// Проверяем структуру доски",
-							"pm.test(\"Board has valid structure\", function () {",
-							"    const response = pm.response.json();",
-							"    ",
-							"    pm.expect(response.board).to.be.an(\"array\").with.lengthOf(3);",
-							"    response.board.forEach(row => {",
-							"        pm.expect(row).to.be.an(\"array\").with.lengthOf(3);",
-							"        row.forEach(cell => {",
-							"            pm.expect(cell).to.be.oneOf([0, 1, 2]);",
-							"        });",
-							"    });",
 							"});"
 						],
 						"type": "text/javascript",
@@ -165,10 +267,16 @@
 			],
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{authHeader}}",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
+					"raw": "  {\n    \"board\": [\n      [0, 0, 1],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -176,159 +284,13 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/game/{{game_id}}",
+					"raw": "{{baseUrl}}/game/{{gameId}}",
 					"host": [
-						"{{base_url}}"
+						"{{baseUrl}}"
 					],
 					"path": [
 						"game",
-						"{{game_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Forbidden move (rewrite cell)",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Проверяем ошибку валидации",
-							"pm.test(\"Status code is 400\", function () {",
-							"    pm.response.to.have.status(400);",
-							"});",
-							"",
-							"// Проверяем сообщение об ошибке",
-							"pm.test(\"Returns INVALID_MOVE status\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.status).to.include(\"INVALID_MOVE\");",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "  {\n    \"board\": [\n      [2, 0, 0],  // Пытаемся изменить клетку, куда уже сходил компьютер (была 1)\n      [0, 1, 0],  // И добавляем свой ход\n      [0, 0, 0]\n    ]\n  }",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/game/{{game_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"game",
-						"{{game_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Forbidden move (two turns)",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Проверяем ошибку валидации",
-							"pm.test(\"Status code is 400\", function () {",
-							"    pm.response.to.have.status(400);",
-							"});",
-							"",
-							"// Проверяем сообщение об ошибке",
-							"pm.test(\"Returns INVALID_MOVE for multiple moves\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.status).to.include(\"INVALID_MOVE\");",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "  {\n    \"board\": [\n      [1, 1, 0],  // Два хода сразу\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/game/{{game_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"game",
-						"{{game_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Invalid UUID",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"// Проверяем ошибку сервера",
-							"pm.test(\"Status code is 400\", function () {",
-							"    pm.response.to.have.status(400);",
-							"});",
-							"",
-							"pm.test(\"Returns error for invalid UUID\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.status).to.include(\"ERROR\");",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/game/{{invalid_game_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"game",
-						"{{invalid_game_id}}"
+						"{{gameId}}"
 					]
 				}
 			},

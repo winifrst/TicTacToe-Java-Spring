@@ -24,8 +24,8 @@ dependencies {
 //    implementation("org.springframework.boot:spring-boot-starter-web")
 //    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-    // Spring Security для авторизации
-//    implementation("org.springframework.boot:spring-boot-starter-security")
+//     Spring Security для авторизации
+    implementation("org.springframework.boot:spring-boot-starter-security")
 
     // База данных
     runtimeOnly("org.postgresql:postgresql")  // runtimeOnly вместо implementation
