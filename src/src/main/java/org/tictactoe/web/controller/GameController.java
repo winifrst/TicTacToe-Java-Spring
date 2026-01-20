@@ -85,68 +85,68 @@ public class GameController {
         }
     }
 
-//    @PostMapping("/new")
-//    public ResponseEntity<GameResponse> createNewGame(HttpServletRequest request) {
-//        try {
-//            // 1. Получаем userId из фильтра
-//            UUID userId = (UUID) request.getAttribute("userId");
-//
-//            if (userId == null) {
-//                GameResponse error = WebGameMapper.toErrorResponse("User not authenticated");
-//                return ResponseEntity.status(401).body(error);
-//            }
-//
-//            // 2. Находим пользователя
-//            UserEntity user = userRepository.findById(userId)
-//                    .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//            // 3. Создаём игру
-//            UUID gameId = UUID.randomUUID();
-//            GameEntity newGame = new GameEntity();
-//            newGame.setId(gameId);
-//            newGame.setBoard("0,0,0,0,0,0,0,0,0");
-//            newGame.setUser(user);  // Связываем с пользователем
-//
-//            // 4. Сохраняем
-//            gameRepository.save(newGame);
-//
-//            // 5. Возвращаем ответ
-//            GameResponse response = WebGameMapper.toNewGameResponse(gameId);
-//            return ResponseEntity.ok(response);
-//
-//        } catch (Exception e) {
-//            GameResponse error = WebGameMapper.toErrorResponse(e.getMessage());
-//            return ResponseEntity.internalServerError().body(error);
-//        }
-//    }
-@PostMapping("/new")
-public ResponseEntity<GameResponse> createNewGame() {
-    try {
-        // ❌ УДАЛИТЕ ЭТУ ПРОВЕРКУ:
-        // UUID userId = (UUID) request.getAttribute("userId");
-        // if (userId == null) {
-        //     GameResponse error = WebGameMapper.toErrorResponse("User not authenticated");
-        //     return ResponseEntity.status(401).body(error);
-        // }
+    @PostMapping("/new")
+    public ResponseEntity<GameResponse> createNewGame(HttpServletRequest request) {
+        try {
+            // 1. Получаем userId из фильтра
+            UUID userId = (UUID) request.getAttribute("userId");
 
-        // ✅ ПРОСТО СОЗДАЁМ ИГРУ БЕЗ ПРОВЕРКИ:
-        UUID gameId = UUID.randomUUID();
-        GameEntity newGame = new GameEntity();
-        newGame.setId(gameId);
-        newGame.setBoard("0,0,0,0,0,0,0,0,0");
+            if (userId == null) {
+                GameResponse error = WebGameMapper.toErrorResponse("User not authenticated");
+                return ResponseEntity.status(401).body(error);
+            }
 
-        // ❌ ТАКЖЕ УДАЛИТЕ ЭТО (пока нет связи с пользователем):
-        // UserEntity user = userRepository.findById(userId).orElseThrow();
-        // newGame.setUser(user);
+            // 2. Находим пользователя
+            UserEntity user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        gameRepository.save(newGame);
+            // 3. Создаём игру
+            UUID gameId = UUID.randomUUID();
+            GameEntity newGame = new GameEntity();
+            newGame.setId(gameId);
+            newGame.setBoard("0,0,0,0,0,0,0,0,0");
+            newGame.setUser(user);  // Связываем с пользователем
 
-        GameResponse response = WebGameMapper.toNewGameResponse(gameId);
-        return ResponseEntity.ok(response);
+            // 4. Сохраняем
+            gameRepository.save(newGame);
 
-    } catch (Exception e) {
-        GameResponse error = WebGameMapper.toErrorResponse(e.getMessage());
-        return ResponseEntity.internalServerError().body(error);
+            // 5. Возвращаем ответ
+            GameResponse response = WebGameMapper.toNewGameResponse(gameId);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            GameResponse error = WebGameMapper.toErrorResponse(e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
     }
-}
+//@PostMapping("/new")
+//public ResponseEntity<GameResponse> createNewGame() {
+//    try {
+//        // ❌ УДАЛИТЕ ЭТУ ПРОВЕРКУ:
+//        // UUID userId = (UUID) request.getAttribute("userId");
+//        // if (userId == null) {
+//        //     GameResponse error = WebGameMapper.toErrorResponse("User not authenticated");
+//        //     return ResponseEntity.status(401).body(error);
+//        // }
+//
+//        // ✅ ПРОСТО СОЗДАЁМ ИГРУ БЕЗ ПРОВЕРКИ:
+//        UUID gameId = UUID.randomUUID();
+//        GameEntity newGame = new GameEntity();
+//        newGame.setId(gameId);
+//        newGame.setBoard("0,0,0,0,0,0,0,0,0");
+//
+//        // ❌ ТАКЖЕ УДАЛИТЕ ЭТО (пока нет связи с пользователем):
+//        // UserEntity user = userRepository.findById(userId).orElseThrow();
+//        // newGame.setUser(user);
+//
+//        gameRepository.save(newGame);
+//
+//        GameResponse response = WebGameMapper.toNewGameResponse(gameId);
+//        return ResponseEntity.ok(response);
+//
+//    } catch (Exception e) {
+//        GameResponse error = WebGameMapper.toErrorResponse(e.getMessage());
+//        return ResponseEntity.internalServerError().body(error);
+//    }
+//}
 }

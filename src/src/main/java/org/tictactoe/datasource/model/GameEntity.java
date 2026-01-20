@@ -23,13 +23,10 @@ public class GameEntity {
     @Column(name = "player_turn")
     private boolean isPlayer1Turn;
 
+    //    @ManyToOne(fetch = FetchType.LAZY)
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id")
-//    private UserEntity user;
 
 
     public GameEntity() {
