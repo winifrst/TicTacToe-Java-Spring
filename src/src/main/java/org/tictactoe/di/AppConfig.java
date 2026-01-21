@@ -2,9 +2,7 @@ package org.tictactoe.di;
 
 //import org.tictactoe.datasource.repository.GameRepository;
 //import org.tictactoe.datasource.repository.InMemoryGameRepository;
-import org.tictactoe.domain.service.GameService;
-import org.tictactoe.domain.service.GameServiceImpl;
-import org.springframework.context.annotation.Bean;
+
 import org.springframework.context.annotation.Configuration;
 
 @Configuration

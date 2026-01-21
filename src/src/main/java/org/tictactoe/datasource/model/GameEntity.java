@@ -1,68 +1,76 @@
 package org.tictactoe.datasource.model;
 
-//import jakarta.persistence.Entity;
-//import org.jetbrains.kotlin.com.google.common.collect.Table;
-
 import jakarta.persistence.*;
-//import jakarta.persistence.Entity;
-//import jakarta.persistence.Id;
-//import jakarta.persistence.Table;
+import org.tictactoe.domain.model.GameStatus;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "games")
 public class GameEntity {
-
     @Id
     private UUID id;
 
-    @Column(name = "board")
+    @Column(name = "board", nullable = false)
     private String board;
 
-    @Column(name = "player_turn")
-    private boolean isPlayer1Turn;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private GameStatus status;
 
-    //    @ManyToOne(fetch = FetchType.LAZY)
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private UserEntity user;
+    @Column(name = "player_x_id")
+    private UUID playerXId;
 
+    @Column(name = "player_o_id")
+    private UUID playerOId;
+
+    @Column(name = "current_player_id")
+    private UUID currentPlayerId;
+
+    @Column(name = "is_against_computer", nullable = false)
+    private boolean isAgainstComputer;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "player_x_symbol", nullable = false)
+    private String playerXSymbol = "X";
+
+    @Column(name = "player_o_symbol", nullable = false)
+    private String playerOSymbol = "O";
 
     public GameEntity() {
+        this.createdAt = LocalDateTime.now();
     }
 
-    public GameEntity(UUID id, String board, boolean isPlayerTurn) {
-        this.id = id;
-        this.board = board;
-        this.isPlayer1Turn = isPlayerTurn;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public UUID getId() {
-        return id;
-    }
+    public String getBoard() { return board; }
+    public void setBoard(String board) { this.board = board; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public GameStatus getStatus() { return status; }
+    public void setStatus(GameStatus status) { this.status = status; }
 
-    public String getBoard() {
-        return board;
-    }
+    public UUID getPlayerXId() { return playerXId; }
+    public void setPlayerXId(UUID playerXId) { this.playerXId = playerXId; }
 
-    public UserEntity getUser() { return user; }
+    public UUID getPlayerOId() { return playerOId; }
+    public void setPlayerOId(UUID playerOId) { this.playerOId = playerOId; }
 
-    public void setBoard(String board) {
-        this.board = board;
-    }
+    public UUID getCurrentPlayerId() { return currentPlayerId; }
+    public void setCurrentPlayerId(UUID currentPlayerId) { this.currentPlayerId = currentPlayerId; }
 
-    public boolean isPlayer1Turn() {
-        return isPlayer1Turn;
-    }
+    public boolean isAgainstComputer() { return isAgainstComputer; }
+    public void setAgainstComputer(boolean againstComputer) { isAgainstComputer = againstComputer; }
 
-    public void setPlayerTurn(boolean playerTurn) {
-        isPlayer1Turn = playerTurn;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setUser(UserEntity user) { this.user = user; }
+    public String getPlayerXSymbol() { return playerXSymbol; }
+    public void setPlayerXSymbol(String playerXSymbol) { this.playerXSymbol = playerXSymbol; }
+
+    public String getPlayerOSymbol() { return playerOSymbol; }
+    public void setPlayerOSymbol(String playerOSymbol) { this.playerOSymbol = playerOSymbol; }
 }

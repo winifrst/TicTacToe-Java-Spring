@@ -28,7 +28,7 @@ public class AuthFilter extends GenericFilterBean {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // Пропускаем публичные endpoints
+        // "Разреши доступ без авторизации к endpoint'ам регистрации и авторизации."
         String path = httpRequest.getRequestURI();
         if (path.startsWith("/auth/")) {
             chain.doFilter(request, response);

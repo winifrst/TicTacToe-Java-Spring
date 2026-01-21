@@ -1,10 +1,10 @@
 // AuthService.java
 package org.tictactoe.domain.service;
 
-import org.tictactoe.domain.model.User;
-
 import org.springframework.stereotype.Service;
+import org.tictactoe.domain.model.User;
 import org.tictactoe.web.model.SignUpRequest;
+
 import java.util.Base64;
 import java.util.UUID;
 

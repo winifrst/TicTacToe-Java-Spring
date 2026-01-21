@@ -19,33 +19,18 @@ public class SecurityConfig {
         this.authFilter = authFilter;
     }
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .sessionManagement(session -> session
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/auth/**").permitAll()  // Разрешить без авторизации
-//                        .anyRequest().authenticated()  // Все остальное требует авторизации
-//                )
-//                .addFilterBefore(authFilter, BasicAuthenticationFilter.class)  // Ваш фильтр ПЕРЕД стандартным
-//                .httpBasic(basic -> basic.disable());  // Отключить стандартную Basic Auth!
-//
-//        return http.build();
-//    }
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session ->
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authorizeHttpRequests(auth -> auth
-                    .anyRequest().permitAll() // ⬅ ВСЁ разрешаем
-            )
-            .addFilterBefore(authFilter, BasicAuthenticationFilter.class);
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll() // ⬅ ВСЁ разрешаем
+                )
+                .addFilterBefore(authFilter, BasicAuthenticationFilter.class);  // "Воспользуйся AuthFilter в качестве фильтра."
 
-    return http.build();
-}
+        return http.build();
+    }
 }

@@ -2,6 +2,7 @@ package org.tictactoe.datasource.mapper;
 
 import org.tictactoe.datasource.model.GameEntity;
 import org.tictactoe.domain.model.Game;
+import org.tictactoe.domain.model.GameStatus;
 
 import static org.tictactoe.domain.service.Constants.BOARD_SIZE;
 
@@ -20,7 +21,7 @@ public class GameMapper {
         return board;
     }
 
-    private static String boardToString(int[][] board) {  // храним в БД в виде строки
+    private static String boardToString(int[][] board) {
         StringBuilder stringBoard = new StringBuilder();
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
@@ -36,7 +37,15 @@ public class GameMapper {
         Game game = new Game();
         game.setId(entity.getId());
         game.setBoard(stringToBoard(entity.getBoard()));
-        game.setPlayerTurn(entity.isPlayer1Turn());
+        game.setStatus(entity.getStatus());
+        game.setPlayerXId(entity.getPlayerXId());
+        game.setPlayerOId(entity.getPlayerOId());
+        game.setCurrentPlayerId(entity.getCurrentPlayerId());
+        game.setAgainstComputer(entity.isAgainstComputer());
+        game.setCreatedAt(entity.getCreatedAt());
+        game.setPlayerXSymbol(entity.getPlayerXSymbol());
+        game.setPlayerOSymbol(entity.getPlayerOSymbol());
+
         return game;
     }
 
@@ -44,7 +53,14 @@ public class GameMapper {
         GameEntity entity = new GameEntity();
         entity.setId(domain.getId());
         entity.setBoard(boardToString(domain.getBoard()));
-        entity.setPlayerTurn(domain.isPlayerTurn());
+        entity.setStatus(domain.getStatus());
+        entity.setPlayerXId(domain.getPlayerXId());
+        entity.setPlayerOId(domain.getPlayerOId());
+        entity.setCurrentPlayerId(domain.getCurrentPlayerId());
+        entity.setAgainstComputer(domain.isAgainstComputer());
+        entity.setCreatedAt(domain.getCreatedAt());
+        entity.setPlayerXSymbol(domain.getPlayerXSymbol());
+        entity.setPlayerOSymbol(domain.getPlayerOSymbol());
 
         return entity;
     }

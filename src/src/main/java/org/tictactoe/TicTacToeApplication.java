@@ -10,9 +10,9 @@ public class TicTacToeApplication {
 
         System.out.println("""          
                  \u001B[1;32m
-                **********************
-                 Tic Tac Toe started!
-                **********************
+                ************************
+                * Tic Tac Toe started! *
+                ************************
                 \u001B[0m""");
     }
 }

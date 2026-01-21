@@ -6,7 +6,6 @@ import org.tictactoe.datasource.mapper.UserMapper;
 import org.tictactoe.datasource.model.UserEntity;
 import org.tictactoe.datasource.repository.UserRepository;
 import org.tictactoe.domain.model.User;
-import org.tictactoe.domain.service.UserService;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -54,7 +53,7 @@ public class UserServiceImpl implements UserService {
                 .map(UserMapper::toDomain);
     }
 
-//    @Override
+    //    @Override
 //    public boolean validateUser(String username, String password) {
 //        Optional<User> userOpt = findByUsername(username);
 //        if (userOpt.isEmpty()) {
@@ -64,45 +63,45 @@ public class UserServiceImpl implements UserService {
 //        User user = userOpt.get();
 //        return password.equals(user.getPassword());
 //    }
-@Override
-public boolean validateUser(String username, String password) {
-    System.out.println("=== VALIDATE USER START ===");
-    System.out.println("Looking for username: " + username);
+    @Override
+    public boolean validateUser(String username, String password) {
+        System.out.println("=== VALIDATE USER START ===");
+        System.out.println("Looking for username: " + username);
 
-    try {
-        // Получаем пользователя из БД
-        Optional<UserEntity> entityOpt = userRepository.findByUsername(username);
-        System.out.println("User found in DB? " + entityOpt.isPresent());
+        try {
+            // Получаем пользователя из БД
+            Optional<UserEntity> entityOpt = userRepository.findByUsername(username);
+            System.out.println("User found in DB? " + entityOpt.isPresent());
 
-        if (entityOpt.isEmpty()) {
-            System.out.println("User not found in database");
+            if (entityOpt.isEmpty()) {
+                System.out.println("User not found in database");
+                return false;
+            }
+
+            UserEntity entity = entityOpt.get();
+            System.out.println("Entity from DB - ID: " + entity.getId());
+            System.out.println("Entity from DB - Username: " + entity.getUsername());
+            System.out.println("Entity from DB - Password: " + entity.getPassword());
+
+            // Конвертируем в domain
+            User user = UserMapper.toDomain(entity);
+            System.out.println("Domain user - Username: " + user.getUsername());
+            System.out.println("Domain user - Password: " + user.getPassword());
+
+            // Сравниваем пароли
+            boolean passwordMatches = password.equals(user.getPassword());
+            System.out.println("Password matches? " + passwordMatches);
+            System.out.println("Input password: '" + password + "'");
+            System.out.println("DB password: '" + user.getPassword() + "'");
+
+            return passwordMatches;
+
+        } catch (Exception e) {
+            System.err.println("ERROR in validateUser: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
-
-        UserEntity entity = entityOpt.get();
-        System.out.println("Entity from DB - ID: " + entity.getId());
-        System.out.println("Entity from DB - Username: " + entity.getUsername());
-        System.out.println("Entity from DB - Password: " + entity.getPassword());
-
-        // Конвертируем в domain
-        User user = UserMapper.toDomain(entity);
-        System.out.println("Domain user - Username: " + user.getUsername());
-        System.out.println("Domain user - Password: " + user.getPassword());
-
-        // Сравниваем пароли
-        boolean passwordMatches = password.equals(user.getPassword());
-        System.out.println("Password matches? " + passwordMatches);
-        System.out.println("Input password: '" + password + "'");
-        System.out.println("DB password: '" + user.getPassword() + "'");
-
-        return passwordMatches;
-
-    } catch (Exception e) {
-        System.err.println("ERROR in validateUser: " + e.getMessage());
-        e.printStackTrace();
-        return false;
     }
-}
 
     @Override
     public boolean existsByUsername(String username) {

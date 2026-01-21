@@ -10,6 +10,7 @@ public class User {
     public UUID getId() {
         return id;
     }
+
     public String getUsername() {
         return username;
     }

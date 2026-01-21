@@ -7,9 +7,13 @@ public class AuthResponse {
 
     private String message;
 
-    public UUID getId() { return id; }
+    public UUID getId() {
+        return id;
+    }
 
-    public String getMessage() { return message; }
+    public String getMessage() {
+        return message;
+    }
 
     public void setMessage(String message) {
         this.message = message;

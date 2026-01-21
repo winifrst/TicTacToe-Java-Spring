@@ -1,7 +1,7 @@
 package org.tictactoe.datasource.model;
 
 import jakarta.persistence.*;
-//import jakarta.persistence.Entity;
+
 import java.util.UUID;
 
 @Entity
