@@ -9,5 +9,6 @@ import java.util.UUID;
 
 public interface GameRepository extends CrudRepository<GameEntity, UUID> {
     List<GameEntity> findByStatus(GameStatus status);
+
     List<GameEntity> findByPlayerXIdOrPlayerOId(UUID playerXId, UUID playerOId);
 }

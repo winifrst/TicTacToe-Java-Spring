@@ -21,11 +21,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-//@RestController
-//@RequestMapping("/game")
-//public class GameController {
-//
-
 @RestController
 @RequestMapping("/game")
 public class GameController {
@@ -40,88 +35,99 @@ public class GameController {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
     }
-
     @PostMapping("/{gameId}")
     public ResponseEntity<GameResponse> updateGame(
             @PathVariable UUID gameId,
             @RequestBody GameRequest request,
             HttpServletRequest httpRequest) {
 
+        System.out.println("=== DEBUG CONTROLLER START ===");
+
         try {
-            // 1. Проверяем авторизацию
             UUID userId = (UUID) httpRequest.getAttribute("userId");
+            System.out.println("Request from user ID: " + userId);
+
             if (userId == null) {
+                System.out.println("ERROR: User not authenticated");
                 return ResponseEntity.status(401).build();
             }
 
-            // 2. Получаем игру
             Optional<GameEntity> gameEntityOptional = gameRepository.findById(gameId);
             if (gameEntityOptional.isEmpty()) {
-                GameResponse errorResponse = WebGameMapper.toErrorResponse("Game not found");
-                return ResponseEntity.status(404).body(errorResponse);
+                System.out.println("ERROR: Game not found: " + gameId);
+                return ResponseEntity.status(404).build();
             }
 
             Game game = GameMapper.toDomain(gameEntityOptional.get());
 
-            // 3. Проверяем, что пользователь участвует в игре
+            System.out.println("Game status: " + game.getStatus());
+            System.out.println("Current player ID: " + game.getCurrentPlayerId());
+            System.out.println("Player X ID: " + game.getPlayerXId());
+            System.out.println("Player O ID: " + game.getPlayerOId());
+            System.out.println("Request user is player X? " + game.isPlayerX(userId));
+            System.out.println("Request user is player O? " + game.isPlayerO(userId));
+            System.out.println("User symbol code: " + game.getPlayerSymbolCode(userId));
+
+            System.out.println("Old board:");
+            printBoard(game.getBoard());
+            System.out.println("New board from request:");
+            printBoard(request.getBoard());
+
             if (!gameService.isPlayerInGame(game, userId)) {
-                GameResponse errorResponse = WebGameMapper.toErrorResponse("You are not a player in this game");
-                return ResponseEntity.status(403).body(errorResponse);
+                System.out.println("ERROR: User not in game");
+                return ResponseEntity.status(403).build();
             }
 
-            // 4. Валидируем новое состояние доски (проверяем, что изменилась только одна клетка)
-            if (!gameService.validateBoard(game, request.getBoard())) {
-                GameResponse errorResponse = WebGameMapper.toErrorResponse(
-                        "Invalid board state. Only one cell should be changed from previous move.");
+            boolean isValid = gameService.validateBoard(game, request.getBoard(), userId);
+            System.out.println("Board validation result: " + isValid);
+
+            if (!isValid) {
+                GameResponse errorResponse = WebGameMapper.toErrorResponse("Invalid move");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
 
-            // 5. Находим, какой ход был сделан
             int[] newMove = findNewMove(game.getBoard(), request.getBoard());
+            System.out.println("New move detected at: [" + newMove[0] + "," + newMove[1] + "]");
+
             if (newMove[0] == -1) {
                 GameResponse errorResponse = WebGameMapper.toErrorResponse("No new move detected");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
 
-            // 6. Проверяем, что это ход текущего игрока
-            if (!gameService.isPlayerTurn(game, userId)) {
-                GameResponse errorResponse = WebGameMapper.toErrorResponse("Not your turn");
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
+            // ВАЖНОЕ ИСПРАВЛЕНИЕ: Вызываем makeMove для обновления статуса
+            System.out.println("Calling makeMove to update game state...");
+            game = gameService.makeMove(game, newMove[0], newMove[1], userId);
 
-            // 7. Проверяем валидность хода
-            if (!gameService.validateMove(game, newMove[0], newMove[1], userId)) {
-                GameResponse errorResponse = WebGameMapper.toErrorResponse("Invalid move");
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
+            System.out.println("Game status after makeMove: " + game.getStatus());
+            System.out.println("Current player ID after makeMove: " + game.getCurrentPlayerId());
 
-            // 8. Обновляем игру с новым ходом
-            game.setBoard(request.getBoard());
-
-            // 9. Проверяем статус игры после хода пользователя
+            // Проверяем статус игры
             game = gameService.checkGameStatus(game);
+            System.out.println("Game status after check: " + game.getStatus());
 
-            // 10. Если игра с компьютером и не закончена - ход компьютера
+            // Если игра с компьютером
             if (game.isAgainstComputer() &&
                     game.getStatus() != GameStatus.PLAYER_X_WON &&
                     game.getStatus() != GameStatus.PLAYER_O_WON &&
                     game.getStatus() != GameStatus.DRAW) {
 
-                // Делаем ход компьютера (алгоритм Minimax)
+                System.out.println("Making computer move...");
                 game = gameService.makeComputerMove(game);
-                // Проверяем статус после хода компьютера
                 game = gameService.checkGameStatus(game);
+                System.out.println("Game status after computer move: " + game.getStatus());
             }
 
-            // 11. Сохраняем обновленную игру
             GameEntity updatedEntity = gameRepository.save(GameMapper.toEntity(game));
             Game updatedGame = GameMapper.toDomain(updatedEntity);
 
-            // 12. Возвращаем ответ
             GameResponse response = WebGameMapper.toResponseFromDomain(updatedGame, userId);
+
+            System.out.println("=== DEBUG CONTROLLER END ===");
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
+            System.err.println("EXCEPTION: " + e.getMessage());
+            e.printStackTrace();
             GameResponse errorResponse = WebGameMapper.toErrorResponse("Internal server error: " + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
@@ -151,11 +157,9 @@ public class GameController {
                 return ResponseEntity.badRequest().body(errorResponse);
             }
 
-            // Создаем новую доску с ходом
             int[][] newBoard = copyBoard(game.getBoard());
             newBoard[moveRequest.getRow()][moveRequest.getCol()] = game.getPlayerSymbolCode(userId);
 
-            // Обновляем игру
             game.setBoard(newBoard);
             game = gameService.checkGameStatus(game);
 
@@ -174,25 +178,6 @@ public class GameController {
             GameResponse errorResponse = WebGameMapper.toErrorResponse(e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
-    }
-
-    private int[] findNewMove(int[][] oldBoard, int[][] newBoard) {
-        for (int i = 0; i < oldBoard.length; i++) {
-            for (int j = 0; j < oldBoard[i].length; j++) {
-                if (oldBoard[i][j] != newBoard[i][j]) {
-                    return new int[]{i, j};
-                }
-            }
-        }
-        return new int[]{-1, -1};
-    }
-
-    private int[][] copyBoard(int[][] board) {
-        int[][] newBoard = new int[3][3];
-        for (int i = 0; i < 3; i++) {
-            System.arraycopy(board[i], 0, newBoard[i], 0, 3);
-        }
-        return newBoard;
     }
 
     @PostMapping("/new")
@@ -258,7 +243,6 @@ public class GameController {
         }
     }
 
-    // Endpoint для присоединения к игре
     @PostMapping("/{gameId}/join")
     public ResponseEntity<GameResponse> joinGame(
             @PathVariable UUID gameId,
@@ -300,6 +284,67 @@ public class GameController {
         } catch (Exception e) {
             GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to join game: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @GetMapping("/{gameId}")
+    public ResponseEntity<GameResponse> getGame(
+            @PathVariable UUID gameId,
+            HttpServletRequest request) {
+
+        try {
+            UUID userId = (UUID) request.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(401).build();
+            }
+
+            Optional<GameEntity> gameEntityOpt = gameRepository.findById(gameId);
+            if (gameEntityOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Game game = GameMapper.toDomain(gameEntityOpt.get());
+
+            if (!gameService.isPlayerInGame(game, userId)) {
+                return ResponseEntity.status(403).build();
+            }
+
+            GameResponse response = WebGameMapper.toResponseFromDomain(game, userId);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to get game: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    private int[] findNewMove(int[][] oldBoard, int[][] newBoard) {
+        for (int i = 0; i < oldBoard.length; i++) {
+            for (int j = 0; j < oldBoard[i].length; j++) {
+                if (oldBoard[i][j] != newBoard[i][j]) {
+                    return new int[]{i, j};
+                }
+            }
+        }
+        return new int[]{-1, -1};
+    }
+
+    private int[][] copyBoard(int[][] board) {
+        int[][] newBoard = new int[3][3];
+        for (int i = 0; i < 3; i++) {
+            System.arraycopy(board[i], 0, newBoard[i], 0, 3);
+        }
+        return newBoard;
+    }
+
+    private void printBoard(int[][] board) {
+        for (int i = 0; i < board.length; i++) {
+            System.out.print("[");
+            for (int j = 0; j < board[i].length; j++) {
+                System.out.print(board[i][j]);
+                if (j < board[i].length - 1) System.out.print(", ");
+            }
+            System.out.println("]");
         }
     }
 }

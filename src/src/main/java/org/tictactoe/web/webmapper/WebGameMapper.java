@@ -23,23 +23,21 @@ public class WebGameMapper {
         response.setAgainstComputer(game.isAgainstComputer());
         response.setCreatedAt(game.getCreatedAt());
 
+        response.setPlayerXSymbol(game.getPlayerXSymbol());
+        response.setPlayerOSymbol(game.getPlayerOSymbol());
+
         // Определяем символ текущего пользователя
         if (currentUserId != null) {
-            String symbol = game.getPlayerSymbolString(currentUserId);
-            response.setPlayerSymbol(symbol);
-
-            // Определяем, чей сейчас ход
-            if (symbol != null) {
-                if (symbol.equals(game.getPlayerXSymbol())) {
-                    response.setYourTurn(game.getStatus() == GameStatus.PLAYER_X_TURN);
-                } else if (symbol.equals(game.getPlayerOSymbol())) {
-                    response.setYourTurn(game.getStatus() == GameStatus.PLAYER_O_TURN);
-                } else {
-                    response.setYourTurn(false);
-                }
+            if (game.isPlayerX(currentUserId)) {
+                response.setPlayerSymbol(game.getPlayerXSymbol());  // X
+            } else if (game.isPlayerO(currentUserId)) {
+                response.setPlayerSymbol(game.getPlayerOSymbol());  // O
             } else {
-                response.setYourTurn(false);
+                // Пользователь не в игре
+                response.setPlayerSymbol(null);
             }
+        } else {
+            response.setPlayerSymbol(null);
         }
 
         return response;

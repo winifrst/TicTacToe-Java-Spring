@@ -7,7 +7,7 @@ import java.util.UUID;
 public interface GameService {
     int[] getNextMove(Game game);
 
-    boolean validateBoard(Game game, int[][] newBoard);
+    boolean validateBoard(Game game, int[][] newBoard, UUID playerId);
 
     Game checkGameStatus(Game game);
 

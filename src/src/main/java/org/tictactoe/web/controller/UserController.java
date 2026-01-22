@@ -19,37 +19,26 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserResponse> getUserInfo(@PathVariable UUID userId) {
-        try {
-            return userService.findById(userId)
-                    .map(user -> {
-                        UserResponse response = new UserResponse();
-                        response.setId(user.getId());
-                        response.setUsername(user.getUsername());
-                        return ResponseEntity.ok(response);
-                    })
-                    .orElse(ResponseEntity.notFound().build());
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        return userService.findById(userId)
+                .map(user -> {
+                    UserResponse response = new UserResponse();
+                    response.setId(user.getId());
+                    response.setUsername(user.getUsername());
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(HttpServletRequest request) {
         try {
-            UUID userId = getUserIdFromRequest(request);
+            UUID userId = (UUID) request.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(401).build();
+            }
             return getUserInfo(userId);
-
         } catch (Exception e) {
             return ResponseEntity.status(401).build();
         }
-    }
-
-    private UUID getUserIdFromRequest(HttpServletRequest request) {
-        UUID userId = (UUID) request.getAttribute("userId");
-        if (userId == null) {
-            throw new RuntimeException("User not authenticated");
-        }
-        return userId;
     }
 }

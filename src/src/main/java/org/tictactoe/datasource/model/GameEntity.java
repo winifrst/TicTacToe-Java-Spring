@@ -44,33 +44,83 @@ public class GameEntity {
         this.createdAt = LocalDateTime.now();
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public UUID getId() {
+        return id;
+    }
 
-    public String getBoard() { return board; }
-    public void setBoard(String board) { this.board = board; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-    public GameStatus getStatus() { return status; }
-    public void setStatus(GameStatus status) { this.status = status; }
+    public String getBoard() {
+        return board;
+    }
 
-    public UUID getPlayerXId() { return playerXId; }
-    public void setPlayerXId(UUID playerXId) { this.playerXId = playerXId; }
+    public void setBoard(String board) {
+        this.board = board;
+    }
 
-    public UUID getPlayerOId() { return playerOId; }
-    public void setPlayerOId(UUID playerOId) { this.playerOId = playerOId; }
+    public GameStatus getStatus() {
+        return status;
+    }
 
-    public UUID getCurrentPlayerId() { return currentPlayerId; }
-    public void setCurrentPlayerId(UUID currentPlayerId) { this.currentPlayerId = currentPlayerId; }
+    public void setStatus(GameStatus status) {
+        this.status = status;
+    }
 
-    public boolean isAgainstComputer() { return isAgainstComputer; }
-    public void setAgainstComputer(boolean againstComputer) { isAgainstComputer = againstComputer; }
+    public UUID getPlayerXId() {
+        return playerXId;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setPlayerXId(UUID playerXId) {
+        this.playerXId = playerXId;
+    }
 
-    public String getPlayerXSymbol() { return playerXSymbol; }
-    public void setPlayerXSymbol(String playerXSymbol) { this.playerXSymbol = playerXSymbol; }
+    public UUID getPlayerOId() {
+        return playerOId;
+    }
 
-    public String getPlayerOSymbol() { return playerOSymbol; }
-    public void setPlayerOSymbol(String playerOSymbol) { this.playerOSymbol = playerOSymbol; }
+    public void setPlayerOId(UUID playerOId) {
+        this.playerOId = playerOId;
+    }
+
+    public UUID getCurrentPlayerId() {
+        return currentPlayerId;
+    }
+
+    public void setCurrentPlayerId(UUID currentPlayerId) {
+        this.currentPlayerId = currentPlayerId;
+    }
+
+    public boolean isAgainstComputer() {
+        return isAgainstComputer;
+    }
+
+    public void setAgainstComputer(boolean againstComputer) {
+        isAgainstComputer = againstComputer;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getPlayerXSymbol() {
+        return playerXSymbol;
+    }
+
+    public void setPlayerXSymbol(String playerXSymbol) {
+        this.playerXSymbol = playerXSymbol;
+    }
+
+    public String getPlayerOSymbol() {
+        return playerOSymbol;
+    }
+
+    public void setPlayerOSymbol(String playerOSymbol) {
+        this.playerOSymbol = playerOSymbol;
+    }
 }

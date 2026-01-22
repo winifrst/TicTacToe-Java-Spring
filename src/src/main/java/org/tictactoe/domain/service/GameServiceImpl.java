@@ -12,81 +12,92 @@ import static org.tictactoe.domain.service.Constants.*;
 public class GameServiceImpl implements GameService {
 
     @Override
-    public boolean validateMove(Game game, int row, int col, UUID playerId) {
-        // Проверяем, что игра активна
-        if (game.getStatus() != GameStatus.PLAYER_X_TURN &&
-                game.getStatus() != GameStatus.PLAYER_O_TURN &&
-                game.getStatus() != GameStatus.COMPUTER_TURN) {
-            return false;
-        }
-
-        // Проверяем, что это ход игрока
-        if (!isPlayerTurn(game, playerId)) {
-            return false;
-        }
-
-        // Проверяем границы доски
-        if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) {
-            return false;
-        }
-
-        // Проверяем, что клетка пуста
-        if (game.getBoard()[row][col] != EMPTY) {
-            return false;
-        }
-
-        // Проверяем, что игрок участвует в игре
-        return isPlayerInGame(game, playerId);
-    }
-
-    @Override
-    public boolean validateBoard(Game game, int[][] newBoard) {
-        // Проверяем, что не изменены предыдущие ходы
+    public boolean validateBoard(Game game, int[][] newBoard, UUID playerId) {
         int[][] oldBoard = game.getBoard();
-        int movesAdded = 0;
+        int changes = 0;
+        int row = -1, col = -1;
+        int newValue = EMPTY;
+        printBoard(oldBoard);
+
+        printBoard(newBoard);
 
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                // Если в старом поле было значение, оно не должно измениться
-                if (oldBoard[i][j] != EMPTY && oldBoard[i][j] != newBoard[i][j]) {
-                    return false;
-                }
-                // Считаем добавленные ходы
-                if (oldBoard[i][j] == EMPTY && newBoard[i][j] != EMPTY) {
-                    movesAdded++;
+                if (oldBoard[i][j] != newBoard[i][j]) {
+                    changes++;
+                    row = i;
+                    col = j;
+                    newValue = newBoard[i][j];
+                    if (oldBoard[i][j] != EMPTY) {
+                        return false;
+                    }
                 }
             }
         }
+        if (changes != 1) {
+            return false;
+        }
 
-        // Должен быть добавлен ровно один ход
-        return movesAdded == 1;
+        int expectedSymbol = game.getPlayerSymbolCode(playerId);
+        if (newValue != expectedSymbol) {
+            return false;
+        }
+
+        boolean isTurn = isPlayerTurn(game, playerId);
+        return isTurn;
+    }
+
+    @Override
+    public boolean isPlayerTurn(Game game, UUID playerId) {
+        if (game.getCurrentPlayerId() == null) {
+            return false;
+        }
+
+        boolean result = false;
+
+        if (game.getStatus() == GameStatus.PLAYER_X_TURN) {
+            boolean isPlayerX = game.isPlayerX(playerId);
+            boolean isCurrentPlayer = game.getCurrentPlayerId().equals(playerId);
+            result = isPlayerX && isCurrentPlayer;
+        } else if (game.getStatus() == GameStatus.PLAYER_O_TURN) {
+            boolean isPlayerO = game.isPlayerO(playerId);
+            boolean isCurrentPlayer = game.getCurrentPlayerId().equals(playerId);
+            result = isPlayerO && isCurrentPlayer;
+        } else if (game.getStatus() == GameStatus.COMPUTER_TURN) {
+
+            result = false;
+        } else {
+
+        }
+        return result;
     }
 
     @Override
     public Game makeMove(Game game, int row, int col, UUID playerId) {
         int playerSymbol = game.getPlayerSymbolCode(playerId);
-
-        // Обновляем доску
         int[][] newBoard = copyBoard(game.getBoard());
         newBoard[row][col] = playerSymbol;
         game.setBoard(newBoard);
+        printBoard(game.getBoard());
 
-        // Обновляем статус игры
-        updateGameStatusAfterMove(game, playerSymbol);
+        if (game.isAgainstComputer()) {
+            if (playerSymbol == FIRST_PLAYER) {
+                game.setStatus(GameStatus.COMPUTER_TURN);
+                game.setCurrentPlayerId(null);
 
-        return game;
-    }
+            } else {
+                game.setStatus(GameStatus.PLAYER_X_TURN);
+                game.setCurrentPlayerId(game.getPlayerXId());
 
-    @Override
-    public Game makeComputerMove(Game game) {
-        int[] move = getNextMove(game);
-
-        if (move[0] != -1) {
-            int[][] newBoard = copyBoard(game.getBoard());
-            newBoard[move[0]][move[1]] = SECOND_PLAYER;
-            game.setBoard(newBoard);
-
-            updateGameStatusAfterMove(game, SECOND_PLAYER);
+            }
+        } else {
+            if (playerSymbol == FIRST_PLAYER) {
+                game.setStatus(GameStatus.PLAYER_O_TURN);
+                game.setCurrentPlayerId(game.getPlayerOId());
+            } else {
+                game.setStatus(GameStatus.PLAYER_X_TURN);
+                game.setCurrentPlayerId(game.getPlayerXId());
+            }
         }
 
         return game;
@@ -99,87 +110,60 @@ public class GameServiceImpl implements GameService {
 
         if (winner == FIRST_PLAYER) {
             game.setStatus(GameStatus.PLAYER_X_WON);
+
         } else if (winner == SECOND_PLAYER) {
             game.setStatus(GameStatus.PLAYER_O_WON);
+
         } else if (isBoardFull(board)) {
             game.setStatus(GameStatus.DRAW);
+
         }
 
         return game;
     }
 
-    private int checkWinner(int[][] board) {
-        // Проверка строк
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            if (board[i][0] != EMPTY &&
-                    board[i][0] == board[i][1] &&
-                    board[i][1] == board[i][2]) {
-                return board[i][0];
-            }
+    @Override
+    public boolean validateMove(Game game, int row, int col, UUID playerId) {
+        if (game.getStatus() != GameStatus.PLAYER_X_TURN &&
+                game.getStatus() != GameStatus.PLAYER_O_TURN &&
+                game.getStatus() != GameStatus.COMPUTER_TURN) {
+            return false;
         }
 
-        // Проверка столбцов
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            if (board[0][j] != EMPTY &&
-                    board[0][j] == board[1][j] &&
-                    board[1][j] == board[2][j]) {
-                return board[0][j];
-            }
+        if (!isPlayerTurn(game, playerId)) {
+            return false;
         }
 
-        // Проверка диагоналей
-        if (board[0][0] != EMPTY &&
-                board[0][0] == board[1][1] &&
-                board[1][1] == board[2][2]) {
-            return board[0][0];
-        }
-        if (board[0][2] != EMPTY &&
-                board[0][2] == board[1][1] &&
-                board[1][1] == board[2][0]) {
-            return board[0][2];
+        if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) {
+            return false;
         }
 
-        return EMPTY;
+        if (game.getBoard()[row][col] != EMPTY) {
+            return false;
+        }
+        return isPlayerInGame(game, playerId);
     }
 
-    private void updateGameStatusAfterMove(Game game, int playerSymbol) {
-        // Сначала проверяем статус игры
-        checkGameStatus(game);
+    @Override
+    public Game makeComputerMove(Game game) {
 
-        // Если игра еще не закончена, обновляем очередь хода
-        if (game.getStatus() == GameStatus.PLAYER_X_TURN ||
-                game.getStatus() == GameStatus.PLAYER_O_TURN ||
-                game.getStatus() == GameStatus.COMPUTER_TURN) {
+        int[] move = getNextMove(game);
 
-            if (game.isAgainstComputer()) {
-                if (playerSymbol == FIRST_PLAYER && game.getStatus() != GameStatus.PLAYER_X_WON) {
-                    // После хода игрока - ход компьютера
-                    game.setStatus(GameStatus.COMPUTER_TURN);
-                    game.setCurrentPlayerId(null);
-                } else if (playerSymbol == SECOND_PLAYER && game.getStatus() != GameStatus.PLAYER_O_WON) {
-                    // После хода компьютера - ход игрока
-                    game.setStatus(GameStatus.PLAYER_X_TURN);
-                    game.setCurrentPlayerId(game.getPlayerXId());
-                }
-            } else {
-                if (playerSymbol == FIRST_PLAYER && game.getStatus() != GameStatus.PLAYER_X_WON) {
-                    // После хода игрока X - ход игрока O
-                    game.setStatus(GameStatus.PLAYER_O_TURN);
-                    game.setCurrentPlayerId(game.getPlayerOId());
-                } else if (playerSymbol == SECOND_PLAYER && game.getStatus() != GameStatus.PLAYER_O_WON) {
-                    // После хода игрока O - ход игрока X
-                    game.setStatus(GameStatus.PLAYER_X_TURN);
-                    game.setCurrentPlayerId(game.getPlayerXId());
-                }
-            }
+        if (move[0] != -1) {
+            int[][] newBoard = copyBoard(game.getBoard());
+            newBoard[move[0]][move[1]] = SECOND_PLAYER;
+            game.setBoard(newBoard);
+
+            game.setStatus(GameStatus.PLAYER_X_TURN);
+            game.setCurrentPlayerId(game.getPlayerXId());
         }
+
+        return game;
     }
 
     @Override
     public int[] getNextMove(Game game) {
         int[][] board = copyBoard(game.getBoard());
-
-        // Используем Minimax для нахождения лучшего хода
         int bestScore = Integer.MIN_VALUE;
         int[] bestMove = new int[]{-1, -1};
 
@@ -202,7 +186,16 @@ public class GameServiceImpl implements GameService {
         return bestMove;
     }
 
-    // Алгоритм Minimax
+    @Override
+    public boolean isPlayerInGame(Game game, UUID playerId) {
+        return game.isPlayerX(playerId) || game.isPlayerO(playerId);
+    }
+
+    @Override
+    public int getPlayerSymbol(Game game, UUID playerId) {
+        return game.getPlayerSymbolCode(playerId);
+    }
+
     private int minimax(int[][] board, int depth, boolean isMaximizing) {
         int winner = checkWinner(board);
 
@@ -239,25 +232,35 @@ public class GameServiceImpl implements GameService {
         }
     }
 
-    @Override
-    public boolean isPlayerInGame(Game game, UUID playerId) {
-        return game.isPlayerX(playerId) || game.isPlayerO(playerId);
-    }
-
-    @Override
-    public int getPlayerSymbol(Game game, UUID playerId) {
-        return game.getPlayerSymbolCode(playerId);
-    }
-
-    @Override
-    public boolean isPlayerTurn(Game game, UUID playerId) {
-        if (game.getCurrentPlayerId() == null) {
-            return false;
+    private int checkWinner(int[][] board) {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            if (board[i][0] != EMPTY &&
+                    board[i][0] == board[i][1] &&
+                    board[i][1] == board[i][2]) {
+                return board[i][0];
+            }
         }
 
-        return game.getCurrentPlayerId().equals(playerId) &&
-                (game.getStatus() == GameStatus.PLAYER_X_TURN ||
-                        game.getStatus() == GameStatus.PLAYER_O_TURN);
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            if (board[0][j] != EMPTY &&
+                    board[0][j] == board[1][j] &&
+                    board[1][j] == board[2][j]) {
+                return board[0][j];
+            }
+        }
+
+        if (board[0][0] != EMPTY &&
+                board[0][0] == board[1][1] &&
+                board[1][1] == board[2][2]) {
+            return board[0][0];
+        }
+        if (board[0][2] != EMPTY &&
+                board[0][2] == board[1][1] &&
+                board[1][1] == board[2][0]) {
+            return board[0][2];
+        }
+
+        return EMPTY;
     }
 
     private boolean isBoardFull(int[][] board) {
@@ -277,5 +280,16 @@ public class GameServiceImpl implements GameService {
             System.arraycopy(board[i], 0, newBoard[i], 0, BOARD_SIZE);
         }
         return newBoard;
+    }
+
+    private void printBoard(int[][] board) {
+        for (int i = 0; i < board.length; i++) {
+            System.out.print("[");
+            for (int j = 0; j < board[i].length; j++) {
+                System.out.print(board[i][j]);
+                if (j < board[i].length - 1) System.out.print(", ");
+            }
+
+        }
     }
 }

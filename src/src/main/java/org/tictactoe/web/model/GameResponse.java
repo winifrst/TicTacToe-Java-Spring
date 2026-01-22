@@ -12,7 +12,6 @@ public class GameResponse {
     private UUID currentPlayerId;
     private boolean againstComputer;
     private String playerSymbol;  // X, O или null
-    private boolean isYourTurn;
     private LocalDateTime createdAt;
     private String playerXSymbol;  // Добавлено
     private String playerOSymbol;  // Добавлено
@@ -41,9 +40,6 @@ public class GameResponse {
 
     public String getPlayerSymbol() { return playerSymbol; }
     public void setPlayerSymbol(String playerSymbol) { this.playerSymbol = playerSymbol; }
-
-    public boolean isYourTurn() { return isYourTurn; }
-    public void setYourTurn(boolean yourTurn) { isYourTurn = yourTurn; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
