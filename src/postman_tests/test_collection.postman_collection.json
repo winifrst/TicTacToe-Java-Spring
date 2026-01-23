@@ -8,293 +8,1288 @@
 	},
 	"item": [
 		{
-			"name": "Register",
-			"event": [
+			"name": "Login & auth",
+			"item": [
 				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"// Создаем Base64",
-							"const username = pm.environment.get(\"username\");",
-							"const password = pm.environment.get(\"password\");",
-							"const credentials = btoa(`${username}:${password}`);",
-							"",
-							"// Сохраняем для следующих запросов",
-							"pm.environment.set(\"authHeader\", `Basic ${credentials}`);",
-							"console.log(\"Credentials saved for:\", username);"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"// Генерируем уникальное имя пользователя",
-							"const timestamp = Date.now();",
-							"const username = `user_${timestamp}`;",
-							"const password = `password123_${timestamp}`;",
-							"",
-							"// Сохраняем в переменные",
-							"pm.environment.set(\"username\", username);",
-							"pm.environment.set(\"password\", password);",
-							"",
-							"console.log(\"Generated user:\", username);"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/auth/signup",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"auth",
-						"signup"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "New auth",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Has user ID\", () => {",
-							"    const json = pm.response.json();",
-							"    pm.expect(json.id).to.not.be.null;",
-							"    pm.expect(json.message).to.include(\"successful\");",
-							"    pm.environment.set(\"userId\", json.id);",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "apikey",
-					"apikey": [
+					"name": "Register user successfully (POSITIVE)",
+					"event": [
 						{
-							"key": "key",
-							"value": "",
-							"type": "string"
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Создаем Base64",
+									"const username = pm.environment.get(\"username\");",
+									"const password = pm.environment.get(\"password\");",
+									"const credentials = btoa(`${username}:${password}`);",
+									"",
+									"// Сохраняем для следующих запросов",
+									"pm.environment.set(\"authHeader\", `Basic ${credentials}`);",
+									"console.log(\"Credentials saved for:\", username);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
 						},
 						{
-							"key": "value",
-							"value": "",
-							"type": "string"
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Генерируем уникальное имя пользователя",
+									"const timestamp = Date.now();",
+									"const username = `user_${timestamp}`;",
+									"const password = `password123_${timestamp}`;",
+									"",
+									"// Сохраняем в переменные",
+									"pm.environment.set(\"username\", username);",
+									"pm.environment.set(\"password\", password);",
+									"",
+									"console.log(\"Generated user:\", username);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
 						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "{{authHeader}}",
-						"type": "text"
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/signup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
 					},
-					{
-						"key": "",
-						"value": "",
-						"type": "text",
-						"disabled": true
-					}
-				],
-				"url": {
-					"raw": "{{baseUrl}}/auth/login",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"auth",
-						"login"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "New game",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"console.log(\"=== DEBUG NEW GAME REQUEST ===\");",
-							"",
-							"// 1. Проверяем переменные окружения",
-							"console.log(\"Environment variables:\");",
-							"console.log(\"authHeader =\", pm.environment.get(\"authHeader\"));",
-							"console.log(\"username =\", pm.environment.get(\"username\"));",
-							"console.log(\"password =\", pm.environment.get(\"password\"));",
-							"console.log(\"userId =\", pm.environment.get(\"userId\"));",
-							"",
-							"// 2. Проверяем заголовки, которые будут отправлены",
-							"console.log(\"\\nRequest headers:\");",
-							"const headers = pm.request.headers;",
-							"headers.each(header => {",
-							"    if (header.key === \"Authorization\") {",
-							"        console.log(`${header.key}: ${header.value}`);",
-							"        ",
-							"        // Декодируем Base64 для проверки",
-							"        const authValue = header.value;",
-							"        if (authValue && authValue.startsWith(\"Basic \")) {",
-							"            const base64Part = authValue.substring(6);",
-							"            try {",
-							"                const decoded = atob(base64Part);",
-							"                console.log(\"Decoded credentials:\", decoded);",
-							"                const [user, pass] = decoded.split(\":\");",
-							"                console.log(\"Username from header:\", user);",
-							"                console.log(\"Password from header:\", pass);",
-							"            } catch (e) {",
-							"                console.log(\"Error decoding Base64:\", e.message);",
-							"            }",
-							"        }",
-							"    }",
-							"});",
-							"",
-							"// 3. Проверяем URL",
-							"console.log(\"\\nRequest URL:\", pm.request.url.toString());"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
+					"response": []
 				},
 				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Game created\", () => {",
-							"    const json = pm.response.json();",
-							"    pm.expect(json.gameId).to.not.be.null;",
-							"    pm.expect(json.status).to.equal(\"NEW_GAME\");",
-							"    pm.expect(json.board).to.eql([[0,0,0],[0,0,0],[0,0,0]]);",
-							"    pm.environment.set(\"gameId\", json.gameId);",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "{{authHeader}}",
-						"type": "text"
-					}
-				],
-				"url": {
-					"raw": "{{baseUrl}}/game/new",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"game",
-						"new"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "New turn",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {},
-						"requests": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "{{authHeader}}",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "  {\n    \"board\": [\n      [0, 0, 1],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
-					"options": {
-						"raw": {
-							"language": "json"
+					"name": "Register with the same login RETURN 400 (NEGATIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.message).to.include(\"already exists\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
 						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/game/{{gameId}}",
-					"host": [
-						"{{baseUrl}}"
 					],
-					"path": [
-						"game",
-						"{{gameId}}"
-					]
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/signup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New auth (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has user ID\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.id).to.not.be.null;",
+									"    pm.expect(json.message).to.include(\"successful\");",
+									"    pm.environment.set(\"userId\", json.id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "key",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "value",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register 2nd player successfully (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Создаем Base64",
+									"const username2 = pm.environment.get(\"username2\");",
+									"const password2 = pm.environment.get(\"password2\");",
+									"const credentials2 = btoa(`${username2}:${password2}`);",
+									"",
+									"// Сохраняем для следующих запросов",
+									"pm.environment.set(\"authHeader2\", `Basic ${credentials2}`);",
+									"console.log(\"Credentials saved for:\", username2);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Генерируем уникальное имя пользователя",
+									"const timestamp = Date.now();",
+									"const username2 = `user_${timestamp}`;",
+									"const password2 = `password123_${timestamp}`;",
+									"",
+									"// Сохраняем в переменные",
+									"pm.environment.set(\"username2\", username2);",
+									"pm.environment.set(\"password2\", password2);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{username2}}\",\n    \"password\": \"{{password2}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/signup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New auth 2nd player (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has user ID\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.id).to.not.be.null;",
+									"    pm.expect(json.message).to.include(\"successful\");",
+									"    pm.environment.set(\"userId2\", json.id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "key",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "value",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader2}}",
+								"type": "text"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Auth with invalid password RETURN 401 (NEGATIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Error message\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.message).to.include(\"Invalid credentials\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "fakepass",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
+		},
+		{
+			"name": "Singleplayer",
+			"item": [
+				{
+					"name": "New game with computer (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Game created & wait for 2nd player\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.gameId).to.not.be.null;",
+									"    pm.expect(json.status).to.equal(\"PLAYER_X_TURN\");",
+									"    pm.expect(json.playerSymbol).to.equal(\"X\");",
+									"    pm.expect(json.board).to.eql([[0,0,0],[0,0,0],[0,0,0]]);",
+									"    pm.environment.set(\"gameIdWithComp\", json.gameId);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// console.log(\"=== DEBUG NEW GAME REQUEST ===\");",
+									"",
+									"// // 1. Проверяем переменные окружения",
+									"// console.log(\"Environment variables:\");",
+									"// console.log(\"authHeader =\", pm.environment.get(\"authHeader\"));",
+									"// console.log(\"username =\", pm.environment.get(\"username\"));",
+									"// console.log(\"password =\", pm.environment.get(\"password\"));",
+									"// console.log(\"userId =\", pm.environment.get(\"userId\"));",
+									"",
+									"// // 2. Проверяем заголовки, которые будут отправлены",
+									"// console.log(\"\\nRequest headers:\");",
+									"// const headers = pm.request.headers;",
+									"// headers.each(header => {",
+									"//     if (header.key === \"Authorization\") {",
+									"//         console.log(`${header.key}: ${header.value}`);",
+									"        ",
+									"//         // Декодируем Base64 для проверки",
+									"//         const authValue = header.value;",
+									"//         if (authValue && authValue.startsWith(\"Basic \")) {",
+									"//             const base64Part = authValue.substring(6);",
+									"//             try {",
+									"//                 const decoded = atob(base64Part);",
+									"//                 console.log(\"Decoded credentials:\", decoded);",
+									"//                 const [user, pass] = decoded.split(\":\");",
+									"//                 console.log(\"Username from header:\", user);",
+									"//                 console.log(\"Password from header:\", pass);",
+									"//             } catch (e) {",
+									"//                 console.log(\"Error decoding Base64:\", e.message);",
+									"//             }",
+									"//         }",
+									"//     }",
+									"// });",
+									"",
+									"// // 3. Проверяем URL",
+									"// console.log(\"\\nRequest URL:\", pm.request.url.toString());"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/new?opponent=computer",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"new"
+							],
+							"query": [
+								{
+									"key": "opponent",
+									"value": "computer"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "First move (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithComp}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forbidden move (NEGATIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithComp}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New game without auth RETURN 401 (NEGATIVE)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// console.log(\"=== DEBUG NEW GAME REQUEST ===\");",
+									"",
+									"// // 1. Проверяем переменные окружения",
+									"// console.log(\"Environment variables:\");",
+									"// console.log(\"authHeader =\", pm.environment.get(\"authHeader\"));",
+									"// console.log(\"username =\", pm.environment.get(\"username\"));",
+									"// console.log(\"password =\", pm.environment.get(\"password\"));",
+									"// console.log(\"userId =\", pm.environment.get(\"userId\"));",
+									"",
+									"// // 2. Проверяем заголовки, которые будут отправлены",
+									"// console.log(\"\\nRequest headers:\");",
+									"// const headers = pm.request.headers;",
+									"// headers.each(header => {",
+									"//     if (header.key === \"Authorization\") {",
+									"//         console.log(`${header.key}: ${header.value}`);",
+									"        ",
+									"//         // Декодируем Base64 для проверки",
+									"//         const authValue = header.value;",
+									"//         if (authValue && authValue.startsWith(\"Basic \")) {",
+									"//             const base64Part = authValue.substring(6);",
+									"//             try {",
+									"//                 const decoded = atob(base64Part);",
+									"//                 console.log(\"Decoded credentials:\", decoded);",
+									"//                 const [user, pass] = decoded.split(\":\");",
+									"//                 console.log(\"Username from header:\", user);",
+									"//                 console.log(\"Password from header:\", pass);",
+									"//             } catch (e) {",
+									"//                 console.log(\"Error decoding Base64:\", e.message);",
+									"//             }",
+									"//         }",
+									"//     }",
+									"// });",
+									"",
+									"// // 3. Проверяем URL",
+									"// console.log(\"\\nRequest URL:\", pm.request.url.toString());"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/new",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"new"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Multiplayer",
+			"item": [
+				{
+					"name": "New game with human by 2nd player (POSITIVE)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Game created & wait for 2nd player\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.gameId).to.not.be.null;",
+									"    pm.expect(json.status).to.equal(\"WAITING_FOR_PLAYERS\");",
+									"    pm.expect(json.playerSymbol).to.equal(\"X\");",
+									"    pm.expect(json.board).to.eql([[0,0,0],[0,0,0],[0,0,0]]);",
+									"    pm.environment.set(\"gameId\", json.gameId);",
+									"});",
+									"",
+									"const response = pm.response.json();",
+									"pm.environment.set(\"gameIdWithHuman\", response.gameId);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader2}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/new?opponent=human",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"new"
+							],
+							"query": [
+								{
+									"key": "opponent",
+									"value": "human"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Join your own game (NEGATIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.include(\"You are already in this game\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader2}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}/join",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithHuman}}",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Join game as 1st player (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}/join",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithHuman}}",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Re-join game (NEGATIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.include(\"Game is not waiting for players\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader2}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}/join",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithHuman}}",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Join singleplayer game RETURN 400 (NEGATIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.include(\"Game is not waiting for players\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader2}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}/join",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithComp}}",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move but it isn't my turn (NEGATIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 2, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithHuman}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "First move (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader2}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithHuman}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Second move (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 2, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithHuman}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gets",
+			"item": [
+				{
+					"name": "Get available games (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/available",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"available"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get game info by GameId (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{gameIdWithComp}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get me (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user info (POSITIVE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{authHeader}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/user/{{userId2}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"{{userId2}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
