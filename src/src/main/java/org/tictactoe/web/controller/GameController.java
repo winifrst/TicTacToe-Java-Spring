@@ -12,7 +12,6 @@ import org.tictactoe.domain.model.GameStatus;
 import org.tictactoe.domain.service.GameService;
 import org.tictactoe.web.model.GameRequest;
 import org.tictactoe.web.model.GameResponse;
-import org.tictactoe.web.model.MoveRequest;
 import org.tictactoe.web.webmapper.WebGameMapper;
 
 import java.util.List;
@@ -35,51 +34,37 @@ public class GameController {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
     }
+
     @PostMapping("/{gameId}")
     public ResponseEntity<GameResponse> updateGame(
             @PathVariable UUID gameId,
             @RequestBody GameRequest request,
             HttpServletRequest httpRequest) {
 
-        System.out.println("=== DEBUG CONTROLLER START ===");
 
         try {
             UUID userId = (UUID) httpRequest.getAttribute("userId");
-            System.out.println("Request from user ID: " + userId);
 
             if (userId == null) {
-                System.out.println("ERROR: User not authenticated");
                 return ResponseEntity.status(401).build();
             }
 
             Optional<GameEntity> gameEntityOptional = gameRepository.findById(gameId);
             if (gameEntityOptional.isEmpty()) {
-                System.out.println("ERROR: Game not found: " + gameId);
                 return ResponseEntity.status(404).build();
             }
 
             Game game = GameMapper.toDomain(gameEntityOptional.get());
 
-            System.out.println("Game status: " + game.getStatus());
-            System.out.println("Current player ID: " + game.getCurrentPlayerId());
-            System.out.println("Player X ID: " + game.getPlayerXId());
-            System.out.println("Player O ID: " + game.getPlayerOId());
-            System.out.println("Request user is player X? " + game.isPlayerX(userId));
-            System.out.println("Request user is player O? " + game.isPlayerO(userId));
-            System.out.println("User symbol code: " + game.getPlayerSymbolCode(userId));
 
-            System.out.println("Old board:");
             printBoard(game.getBoard());
-            System.out.println("New board from request:");
             printBoard(request.getBoard());
 
             if (!gameService.isPlayerInGame(game, userId)) {
-                System.out.println("ERROR: User not in game");
                 return ResponseEntity.status(403).build();
             }
 
             boolean isValid = gameService.validateBoard(game, request.getBoard(), userId);
-            System.out.println("Board validation result: " + isValid);
 
             if (!isValid) {
                 GameResponse errorResponse = WebGameMapper.toErrorResponse("Invalid move");
@@ -87,23 +72,17 @@ public class GameController {
             }
 
             int[] newMove = findNewMove(game.getBoard(), request.getBoard());
-            System.out.println("New move detected at: [" + newMove[0] + "," + newMove[1] + "]");
 
             if (newMove[0] == -1) {
                 GameResponse errorResponse = WebGameMapper.toErrorResponse("No new move detected");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
 
-            // ВАЖНОЕ ИСПРАВЛЕНИЕ: Вызываем makeMove для обновления статуса
-            System.out.println("Calling makeMove to update game state...");
             game = gameService.makeMove(game, newMove[0], newMove[1], userId);
 
-            System.out.println("Game status after makeMove: " + game.getStatus());
-            System.out.println("Current player ID after makeMove: " + game.getCurrentPlayerId());
 
             // Проверяем статус игры
             game = gameService.checkGameStatus(game);
-            System.out.println("Game status after check: " + game.getStatus());
 
             // Если игра с компьютером
             if (game.isAgainstComputer() &&
@@ -111,10 +90,8 @@ public class GameController {
                     game.getStatus() != GameStatus.PLAYER_O_WON &&
                     game.getStatus() != GameStatus.DRAW) {
 
-                System.out.println("Making computer move...");
                 game = gameService.makeComputerMove(game);
                 game = gameService.checkGameStatus(game);
-                System.out.println("Game status after computer move: " + game.getStatus());
             }
 
             GameEntity updatedEntity = gameRepository.save(GameMapper.toEntity(game));
@@ -122,60 +99,11 @@ public class GameController {
 
             GameResponse response = WebGameMapper.toResponseFromDomain(updatedGame, userId);
 
-            System.out.println("=== DEBUG CONTROLLER END ===");
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.err.println("EXCEPTION: " + e.getMessage());
             e.printStackTrace();
             GameResponse errorResponse = WebGameMapper.toErrorResponse("Internal server error: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(errorResponse);
-        }
-    }
-
-    @PostMapping("/{gameId}/move")
-    public ResponseEntity<GameResponse> makeSimpleMove(
-            @PathVariable UUID gameId,
-            @RequestBody MoveRequest moveRequest,
-            HttpServletRequest request) {
-
-        try {
-            UUID userId = (UUID) request.getAttribute("userId");
-            if (userId == null) {
-                return ResponseEntity.status(401).build();
-            }
-
-            Optional<GameEntity> gameEntityOpt = gameRepository.findById(gameId);
-            if (gameEntityOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            Game game = GameMapper.toDomain(gameEntityOpt.get());
-
-            if (!gameService.validateMove(game, moveRequest.getRow(), moveRequest.getCol(), userId)) {
-                GameResponse errorResponse = WebGameMapper.toErrorResponse("Invalid move");
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
-
-            int[][] newBoard = copyBoard(game.getBoard());
-            newBoard[moveRequest.getRow()][moveRequest.getCol()] = game.getPlayerSymbolCode(userId);
-
-            game.setBoard(newBoard);
-            game = gameService.checkGameStatus(game);
-
-            if (game.isAgainstComputer() && game.getStatus() == GameStatus.COMPUTER_TURN) {
-                game = gameService.makeComputerMove(game);
-                game = gameService.checkGameStatus(game);
-            }
-
-            GameEntity updatedEntity = gameRepository.save(GameMapper.toEntity(game));
-            Game updatedGame = GameMapper.toDomain(updatedEntity);
-
-            GameResponse response = WebGameMapper.toResponseFromDomain(updatedGame, userId);
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            GameResponse errorResponse = WebGameMapper.toErrorResponse(e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -344,7 +272,6 @@ public class GameController {
                 System.out.print(board[i][j]);
                 if (j < board[i].length - 1) System.out.print(", ");
             }
-            System.out.println("]");
         }
     }
 }

@@ -13,8 +13,8 @@ public class GameResponse {
     private boolean againstComputer;
     private String playerSymbol;  // X, O или null
     private LocalDateTime createdAt;
-    private String playerXSymbol;  // Добавлено
-    private String playerOSymbol;  // Добавлено
+    private String playerXSymbol;
+    private String playerOSymbol;
 
     // Геттеры и сеттеры
     public String getGameId() { return gameId; }
