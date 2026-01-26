@@ -15,13 +15,13 @@ public class AuthService {
         this.userService = userService;
     }
 
-    public boolean register(SignUpRequest request) {
+    public UUID register(SignUpRequest request) {
         if (userService.existsByUsername(request.getUsername())) {
-            return false;
+            return null;
         }
 
-        userService.createUser(request.getUsername(), request.getPassword());
-        return true;
+        User user = userService.createUser(request.getUsername(), request.getPassword());
+        return user.getId();
     }
 
     public UUID authenticate(String authHeader) {

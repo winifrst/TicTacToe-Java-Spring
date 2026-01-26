@@ -1,5 +1,13 @@
 package org.tictactoe.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +30,11 @@ import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/game")
+@Tag(
+        name = "Игры",
+        description = "Управление игровыми сессиями"
+)
+@SecurityRequirement(name = "basicAuth")
 public class GameController {
     private final GameService gameService;
     private final GameRepository gameRepository;
@@ -36,6 +49,55 @@ public class GameController {
     }
 
     @PostMapping("/{gameId}")
+    @Operation(
+            summary = "Сделать ход в игре",
+            description = "Выполняет ход в указанной игре. После хода пользователя, " +
+                    "если игра против компьютера, компьютер делает ответный ход автоматически."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Ход успешно выполнен",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Успешный ход",
+                                    value = """
+                    {
+                        "gameId": "123e4567-e89b-12d3-a456-426614174000",
+                        "board": [[0,0,1],[0,2,0],[0,0,0]],
+                        "status": "PLAYER_O_TURN",
+                        "playerXId": "123e4567-e89b-12d3-a456-426614174000",
+                        "playerOId": "223e4567-e89b-12d3-a456-426614174001",
+                        "currentPlayerId": "223e4567-e89b-12d3-a456-426614174001",
+                        "againstComputer": false,
+                        "playerSymbol": "X",
+                        "createdAt": "2024-01-15T10:30:00",
+                        "playerXSymbol": "X",
+                        "playerOSymbol": "O"
+                    }
+                    """
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Некорректный ход или данные",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Ошибка хода",
+                                    value = "{\"gameId\": \"error\", \"status\": \"ERROR: Invalid move\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "403", description = "Нет доступа к игре"),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена"),
+            @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
+    })
     public ResponseEntity<GameResponse> updateGame(
             @PathVariable UUID gameId,
             @RequestBody GameRequest request,
@@ -109,11 +171,25 @@ public class GameController {
     }
 
     @PostMapping("/new")
+    @Operation(
+            summary = "Создать новую игру",
+            description = "Создает новую игровую сессию. Можно выбрать игру против компьютера или ожидание второго игрока."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Игра успешно создана",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "400", description = "Ошибка при создании игры")
+    })
     public ResponseEntity<GameResponse> createGame(
             HttpServletRequest request,
-            @RequestParam(defaultValue = "computer") String opponent,
-            @RequestParam(required = false) String playerXSymbol,
-            @RequestParam(required = false) String playerOSymbol) {
+            @RequestParam(defaultValue = "computer") String opponent) {
 
         try {
             UUID userId = (UUID) request.getAttribute("userId");
@@ -123,8 +199,6 @@ public class GameController {
 
             Game game = new Game();
             game.setPlayerXId(userId);
-            game.setPlayerXSymbol(playerXSymbol != null ? playerXSymbol : "X");
-            game.setPlayerOSymbol(playerOSymbol != null ? playerOSymbol : "O");
 
             if ("computer".equalsIgnoreCase(opponent)) {
                 game.setAgainstComputer(true);
@@ -148,6 +222,22 @@ public class GameController {
     }
 
     @GetMapping("/available")
+    @Operation(
+            summary = "Получить список доступных игр",
+            description = "Возвращает список игр, ожидающих второго игрока. " +
+                    "Не включает игры, где текущий пользователь уже является участником."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Список доступных игр",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse[].class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация")
+    })
     public ResponseEntity<List<GameResponse>> getAvailableGames(HttpServletRequest request) {
         try {
             UUID userId = (UUID) request.getAttribute("userId");
@@ -172,6 +262,24 @@ public class GameController {
     }
 
     @PostMapping("/{gameId}/join")
+    @Operation(
+            summary = "Присоединиться к игре",
+            description = "Текущий пользователь присоединяется к игре в качестве второго игрока (игрок O). " +
+                    "Доступно только для игр со статусом WAITING_FOR_PLAYERS."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешно присоединились к игре",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Невозможно присоединиться к игре"),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена")
+    })
     public ResponseEntity<GameResponse> joinGame(
             @PathVariable UUID gameId,
             HttpServletRequest request) {
@@ -216,6 +324,24 @@ public class GameController {
     }
 
     @GetMapping("/{gameId}")
+    @Operation(
+            summary = "Получить информацию об игре",
+            description = "Возвращает текущее состояние указанной игры. " +
+                    "Доступно только для участников игры."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Информация об игре",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "403", description = "Нет доступа к игре"),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена")
+    })
     public ResponseEntity<GameResponse> getGame(
             @PathVariable UUID gameId,
             HttpServletRequest request) {

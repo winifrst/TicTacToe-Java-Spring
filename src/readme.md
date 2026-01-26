@@ -34,16 +34,19 @@
 ## Работа с БД    
 `docker exec -it tictactoe-db bash`  
 `psql -U game_user -d game_db`  
+`\dt`  
 `SELECT * FROM games;`  
 `SELECT * FROM users;`
 
+## Swagger-UI  
+Для проверки API можно использовать сваггер по адресу: [**http://localhost:8080/swagger-ui/index.html#**](http://localhost:8080/swagger-ui/index.html#)  
 
 ## Тесты  
-Постман коллекция (позитивные и негативные сценарии) лежит в директории `src/postman_tests`  
+Постман коллекция (позитивные и негативные сценарии) и окружение лежат в директории `src/postman_tests`  
 
 ## Реализованные эндпоинты
-`POST /auth/login` - для регистрации пользователя  
-`POST /auth/signup` - для авторизации пользователя  
+`POST /auth/signup` - для регистрации пользователя  
+`POST /auth/login` - для авторизации пользователя  
 `POST /game/new` - для создания новой игры  
 `GET  /game/available` - для получения списка доступных игр  
 `POST /game/{id}/join` - для присоединения к игре  
@@ -123,6 +126,29 @@
 
 ---
 
+
+## Структура проекта
+```
+src/
+└── main/
+    ├── java/org/tictactoe/
+    │   ├── web/           # Web слой (контроллеры, DTO, фильтры)
+    │   │   ├── controller/
+    │   │   ├── filter/
+    │   │   ├── model/
+    │   │   └── webmapper/
+    │   ├── domain/        # Бизнес-логика
+    │   │   ├── model/
+    │   │   └── service/
+    │   ├── datasource/    # Работа с данными
+    │   │   ├── model/
+    │   │   ├── repository/
+    │   │   └── mapper/
+    │   └── di/           # Конфигурация зависимостей
+    └── resources/
+        ├── application.properties
+        └── docker-compose.yml
+```
 ## Поток данных в приложении
 ```
 Клиент  
