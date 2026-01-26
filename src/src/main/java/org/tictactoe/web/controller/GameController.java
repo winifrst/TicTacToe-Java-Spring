@@ -1,6 +1,7 @@
 package org.tictactoe.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -189,6 +190,32 @@ public class GameController {
     })
     public ResponseEntity<GameResponse> createGame(
             HttpServletRequest request,
+
+            @Parameter(
+                    description = """
+            Тип противника:
+            - **computer** - игра против ИИ (алгоритм минимакс)
+            - **human** - игра против другого игрока (ожидание подключения)
+            """,
+                    required = false,
+                    schema = @Schema(
+                            allowableValues = {"computer", "human"},
+                            defaultValue = "computer",
+                            example = "computer"
+                    ),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Против компьютера",
+                                    value = "computer",
+                                    description = "Игра против искусственного интеллекта"
+                            ),
+                            @ExampleObject(
+                                    name = "Против человека",
+                                    value = "human",
+                                    description = "Игра против другого игрока (мультиплеер)"
+                            )
+                    }
+            )
             @RequestParam(defaultValue = "computer") String opponent) {
 
         try {
