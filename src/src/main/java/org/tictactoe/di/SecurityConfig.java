@@ -26,8 +26,12 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+//                .authorizeHttpRequests(auth -> auth
+//                        .anyRequest().permitAll()
+//                )
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // ⬅ ВСЁ разрешаем
+                        .requestMatchers("/auth/signup", "/auth/login").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(authFilter, BasicAuthenticationFilter.class);  // "Воспользуйся AuthFilter в качестве фильтра."
 

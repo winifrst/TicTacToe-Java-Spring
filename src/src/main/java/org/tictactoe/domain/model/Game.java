@@ -71,7 +71,7 @@ public class Game {
     public int getPlayerSymbolCode(UUID playerId) {
         if (isPlayerX(playerId)) return Constants.FIRST_PLAYER;
         if (isPlayerO(playerId)) return Constants.SECOND_PLAYER;
-        return Constants.EMPTY;  // еслине участвует в игре
+        return Constants.EMPTY;  // если не участвует в игре
     }
 
     public String getPlayerSymbolString(UUID playerId) {
