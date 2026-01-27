@@ -6,6 +6,7 @@ import org.tictactoe.datasource.mapper.UserMapper;
 import org.tictactoe.datasource.model.UserEntity;
 import org.tictactoe.datasource.repository.UserRepository;
 import org.tictactoe.domain.model.User;
+import org.tictactoe.domain.model.Role;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +26,8 @@ public class UserServiceImpl implements UserService {
         user.setId(UUID.randomUUID());
         user.setUsername(username);
         user.setPassword(password);
+
+        user.addRole(Role.USER);
 
         userRepository.save(UserMapper.toEntity(user));
         return user;
