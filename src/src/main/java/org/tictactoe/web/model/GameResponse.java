@@ -81,7 +81,6 @@ public class GameResponse {
     )
     private String playerOSymbol;
 
-    // Геттеры и сеттеры
     public String getGameId() { return gameId; }
     public void setGameId(String gameId) { this.gameId = gameId; }
 

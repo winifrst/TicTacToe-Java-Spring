@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.tictactoe.domain.service.AuthService;
 import org.tictactoe.web.model.AuthResponse;
+import org.tictactoe.web.model.JwtRequest;
+import org.tictactoe.web.model.JwtResponse;
 import org.tictactoe.web.model.SignUpRequest;
 
 import java.util.UUID;
@@ -57,12 +59,10 @@ public class AuthController {
             )
     })
     public ResponseEntity<AuthResponse> signUp(@RequestBody SignUpRequest request) {
-        UUID userId = authService.register(request);
-//        boolean success = authService.register(request);
+        boolean success = authService.register(request);
 
         AuthResponse response = new AuthResponse();
-        if (userId != null) {
-            response.setId(userId); // Устанавливаем ID
+        if (success) {
             response.setMessage("User registered successfully");
             return ResponseEntity.ok(response);
         } else {
@@ -103,17 +103,14 @@ public class AuthController {
                     )
             )
     })
-    public ResponseEntity<AuthResponse> login(@RequestHeader("Authorization") String authHeader) {
-        UUID userId = authService.authenticate(authHeader);
-
-        AuthResponse response = new AuthResponse();
-        if (userId != null) {
-            response.setId(userId);
-            response.setMessage("Authentication successful");
-            return ResponseEntity.ok(response);
-        } else {
-            response.setMessage("Invalid credentials");
-            return ResponseEntity.status(401).body(response);
+    public ResponseEntity<?> login(@RequestBody JwtRequest request) {
+        try {
+            JwtResponse jwtResponse = authService.login(request);
+            return ResponseEntity.ok(jwtResponse);
+        } catch (Exception e) {
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage("Invalid credentials: " + e.getMessage());
+            return ResponseEntity.status(401).body(errorResponse);
         }
     }
 }

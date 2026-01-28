@@ -1,17 +1,27 @@
 package org.tictactoe.domain.model;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.*;
 
 public class User {
     private UUID id;
     private String username;
     private String password;
-    private Set<Role> roles = new HashSet<>();
+//    private Set<Role> roles = new HashSet<>();
+private Role role = Role.USER;  // Одна роль
 
-    public User() {
-        this.roles.add(Role.USER);
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(role);
+    }
+
+    // Геттер/сеттер для роли
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public UUID getId() {
@@ -26,9 +36,9 @@ public class User {
         return password;
     }
 
-    public void addRole(Role role) {
-        this.roles.add(role);
-    }
+//    public void addRole(Role role) {
+//        this.roles.add(role);
+//    }
 
     public void setId(UUID id) {
         this.id = id;
@@ -42,12 +52,12 @@ public class User {
         this.password = password;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
-    }
+//    public Set<Role> getRoles() {
+//        return roles;
+//    }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
+//    public void setRoles(Set<Role> roles) {
+//        this.roles = roles;
+//    }
 
 }

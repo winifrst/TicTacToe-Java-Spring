@@ -27,11 +27,11 @@ public class AuthResponse {
         return message;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

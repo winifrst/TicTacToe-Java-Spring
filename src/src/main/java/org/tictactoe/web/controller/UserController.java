@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.tictactoe.domain.service.UserService;
 import org.tictactoe.web.model.UserResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 
 @RestController
@@ -56,16 +58,22 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<UserResponse> getUserInfo(@PathVariable UUID userId) {
-        return userService.findById(userId)
-                .map(user -> {
-                    UserResponse response = new UserResponse();
-                    response.setId(user.getId());
-                    response.setUsername(user.getUsername());
-                    return ResponseEntity.ok(response);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return userService.findById(userId)
+                    .map(user -> {
+                        UserResponse response = new UserResponse();
+                        response.setId(user.getId());
+                        response.setUsername(user.getUsername());
+                        return ResponseEntity.ok(response);
+                    })
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
+
 
     @GetMapping("/me")
     @Operation(
@@ -83,15 +91,17 @@ public class UserController {
             ),
             @ApiResponse(responseCode = "401", description = "Требуется авторизация")
     })
-    public ResponseEntity<UserResponse> getCurrentUser(HttpServletRequest request) {
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<UserResponse> getCurrentUser() {
         try {
-            UUID userId = (UUID) request.getAttribute("userId");
-            if (userId == null) {
-                return ResponseEntity.status(401).build();
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UUID) {
+                UUID userId = (UUID) auth.getPrincipal();
+                return getUserInfo(userId);
             }
-            return getUserInfo(userId);
-        } catch (Exception e) {
             return ResponseEntity.status(401).build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

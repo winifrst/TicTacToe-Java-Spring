@@ -9,13 +9,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.tictactoe.datasource.mapper.GameMapper;
 import org.tictactoe.datasource.model.GameEntity;
 import org.tictactoe.datasource.repository.GameRepository;
-import org.tictactoe.datasource.repository.UserRepository;
 import org.tictactoe.domain.model.Game;
 import org.tictactoe.domain.model.GameStatus;
 import org.tictactoe.domain.service.GameService;
@@ -35,18 +36,24 @@ import java.util.stream.StreamSupport;
         name = "Игры",
         description = "Управление игровыми сессиями"
 )
-@SecurityRequirement(name = "basicAuth")
+@SecurityRequirement(name = "bearerAuth")
 public class GameController {
     private final GameService gameService;
     private final GameRepository gameRepository;
-    private final UserRepository userRepository;
 
     public GameController(GameService gameService,
-                          GameRepository gameRepository,
-                          UserRepository userRepository) {
+                          GameRepository gameRepository) {
         this.gameService = gameService;
         this.gameRepository = gameRepository;
-        this.userRepository = userRepository;
+    }
+
+    // Получение userId из SecurityContext (вспомогательный метод)
+    private UUID getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UUID) {
+            return (UUID) auth.getPrincipal();
+        }
+        throw new RuntimeException("User not authenticated");
     }
 
     @PostMapping("/{gameId}")
@@ -99,18 +106,13 @@ public class GameController {
             @ApiResponse(responseCode = "404", description = "Игра не найдена"),
             @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     })
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<GameResponse> updateGame(
             @PathVariable UUID gameId,
-            @RequestBody GameRequest request,
-            HttpServletRequest httpRequest) {
-
+            @RequestBody GameRequest request) {
 
         try {
-            UUID userId = (UUID) httpRequest.getAttribute("userId");
-
-            if (userId == null) {
-                return ResponseEntity.status(401).build();
-            }
+            UUID userId = getCurrentUserId();
 
             Optional<GameEntity> gameEntityOptional = gameRepository.findById(gameId);
             if (gameEntityOptional.isEmpty()) {
@@ -118,7 +120,6 @@ public class GameController {
             }
 
             Game game = GameMapper.toDomain(gameEntityOptional.get());
-
 
             printBoard(game.getBoard());
             printBoard(request.getBoard());
@@ -143,7 +144,6 @@ public class GameController {
 
             game = gameService.makeMove(game, newMove[0], newMove[1], userId);
 
-
             // Проверяем статус игры
             game = gameService.checkGameStatus(game);
 
@@ -164,7 +164,10 @@ public class GameController {
 
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
             e.printStackTrace();
             GameResponse errorResponse = WebGameMapper.toErrorResponse("Internal server error: " + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
@@ -188,13 +191,12 @@ public class GameController {
             @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
             @ApiResponse(responseCode = "400", description = "Ошибка при создании игры")
     })
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<GameResponse> createGame(
-            HttpServletRequest request,
-
             @Parameter(
                     description = """
             Тип противника:
-            - **computer** - игра против ИИ (алгоритм минимакс)
+            - **computer** - игра против ИИ
             - **human** - игра против другого игрока (ожидание подключения)
             """,
                     required = false,
@@ -219,10 +221,7 @@ public class GameController {
             @RequestParam(defaultValue = "computer") String opponent) {
 
         try {
-            UUID userId = (UUID) request.getAttribute("userId");
-            if (userId == null) {
-                return ResponseEntity.status(401).build();
-            }
+            UUID userId = getCurrentUserId();
 
             Game game = new Game();
             game.setPlayerXId(userId);
@@ -242,7 +241,10 @@ public class GameController {
             GameResponse response = WebGameMapper.toResponseFromDomain(savedGame, userId);
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
             GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to create game: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -265,12 +267,10 @@ public class GameController {
             ),
             @ApiResponse(responseCode = "401", description = "Требуется авторизация")
     })
-    public ResponseEntity<List<GameResponse>> getAvailableGames(HttpServletRequest request) {
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<GameResponse>> getAvailableGames() {
         try {
-            UUID userId = (UUID) request.getAttribute("userId");
-            if (userId == null) {
-                return ResponseEntity.status(401).build();
-            }
+            UUID userId = getCurrentUserId();
 
             List<Game> availableGames = StreamSupport.stream(gameRepository.findAll().spliterator(), false)
                     .map(GameMapper::toDomain)
@@ -283,7 +283,10 @@ public class GameController {
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(responses);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -307,15 +310,10 @@ public class GameController {
             @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
             @ApiResponse(responseCode = "404", description = "Игра не найдена")
     })
-    public ResponseEntity<GameResponse> joinGame(
-            @PathVariable UUID gameId,
-            HttpServletRequest request) {
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<GameResponse> joinGame(@PathVariable UUID gameId) {
         try {
-            UUID userId = (UUID) request.getAttribute("userId");
-            if (userId == null) {
-                return ResponseEntity.status(401).build();
-            }
+            UUID userId = getCurrentUserId();
 
             Optional<GameEntity> gameEntityOpt = gameRepository.findById(gameId);
             if (gameEntityOpt.isEmpty()) {
@@ -344,7 +342,10 @@ public class GameController {
             GameResponse response = WebGameMapper.toResponseFromDomain(updatedGame, userId);
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
             GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to join game: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -369,15 +370,10 @@ public class GameController {
             @ApiResponse(responseCode = "403", description = "Нет доступа к игре"),
             @ApiResponse(responseCode = "404", description = "Игра не найдена")
     })
-    public ResponseEntity<GameResponse> getGame(
-            @PathVariable UUID gameId,
-            HttpServletRequest request) {
-
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<GameResponse> getGame(@PathVariable UUID gameId) {
         try {
-            UUID userId = (UUID) request.getAttribute("userId");
-            if (userId == null) {
-                return ResponseEntity.status(401).build();
-            }
+            UUID userId = getCurrentUserId();
 
             Optional<GameEntity> gameEntityOpt = gameRepository.findById(gameId);
             if (gameEntityOpt.isEmpty()) {
@@ -393,7 +389,10 @@ public class GameController {
             GameResponse response = WebGameMapper.toResponseFromDomain(game, userId);
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
             GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to get game: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -408,14 +407,6 @@ public class GameController {
             }
         }
         return new int[]{-1, -1};
-    }
-
-    private int[][] copyBoard(int[][] board) {
-        int[][] newBoard = new int[3][3];
-        for (int i = 0; i < 3; i++) {
-            System.arraycopy(board[i], 0, newBoard[i], 0, 3);
-        }
-        return newBoard;
     }
 
     private void printBoard(int[][] board) {

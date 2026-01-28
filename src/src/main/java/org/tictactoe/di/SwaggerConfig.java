@@ -16,13 +16,15 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Tic Tac Toe API")
-                        .version("1.0")
+                        .version("3.0")
                         .description("API для игры в крестики-нолики"))
-                .addSecurityItem(new SecurityRequirement().addList("basicAuth"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("basicAuth",
+                        .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
-                                        .scheme("basic")));
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("Введите JWT токен в формате: Bearer {token}")));
     }
 }
