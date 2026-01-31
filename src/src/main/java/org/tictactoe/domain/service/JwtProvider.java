@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 @Component
 public class JwtProvider {
 
-    // Секретные ключи
     @Value("${jwt.secret.access}")
     private String jwtAccessSecret;
 
@@ -31,13 +30,12 @@ public class JwtProvider {
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpiration;
 
-    // Генерация Access Token
+    // Метод генерации accessToken по User
     public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId().toString());
         claims.put("username", user.getUsername());
 
-        // Используем getAuthorities() который мы добавили в User
         List<String> roles = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
@@ -55,7 +53,7 @@ public class JwtProvider {
                 .compact();
     }
 
-    // Генерация Refresh Token
+    // Метод генерации refreshToken по User
     public String generateRefreshToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId().toString());
@@ -73,39 +71,66 @@ public class JwtProvider {
                 .compact();
     }
 
-    // Валидация Access Token
+    // Метод валидации accessToken
     public boolean validateAccessToken(String token) {
         return validateToken(token, jwtAccessSecret);
     }
 
-    // Валидация Refresh Token
+    // Метод валидации refreshToken
     public boolean validateRefreshToken(String token) {
         return validateToken(token, jwtRefreshSecret);
     }
 
-    // Получение Claims из Access Token
+    // Метод получения claims
+    public Claims getClaimsFromToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey(jwtAccessSecret))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            try {
+                return Jwts.parserBuilder()
+                        .setSigningKey(getSignInKey(jwtRefreshSecret))
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody();
+            } catch (Exception ex) {
+                throw new RuntimeException("Invalid JWT token", ex);
+            }
+        }
+    }
+
+    // Дополнительные методы для получения claims по типу токена
     public Claims getAccessClaims(String token) {
-        return getClaims(token, jwtAccessSecret);
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey(jwtAccessSecret))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid access token", e);
+        }
     }
 
-    // Получение Claims из Refresh Token
     public Claims getRefreshClaims(String token) {
-        return getClaims(token, jwtRefreshSecret);
-    }
-
-    // Получение User ID из токена
-    public UUID getUserIdFromToken(String token) {
-        Claims claims = getAccessClaims(token);
-        return UUID.fromString(claims.get("userId", String.class));
-    }
-
-    // Получение ролей из токена
-    public List<String> getRolesFromToken(String token) {
-        Claims claims = getAccessClaims(token);
-        return claims.get("roles", List.class);
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey(jwtRefreshSecret))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid refresh token", e);
+        }
     }
 
     private boolean validateToken(String token, String secret) {
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSignInKey(secret))
@@ -113,23 +138,18 @@ public class JwtProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            // Токен невалидный (истёк, неправильная подпись и т.д.)
             System.err.println("Invalid JWT token: " + e.getMessage());
             return false;
         }
     }
 
-    private Claims getClaims(String token, String secret) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignInKey(secret))
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
-
     private SecretKey getSignInKey(String secret) {
-        // Преобразуем строку в SecretKey для HS256
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String getUserIdFromToken(String token) {
+        Claims claims = getAccessClaims(token);
+        return claims.get("userId", String.class);
     }
 }

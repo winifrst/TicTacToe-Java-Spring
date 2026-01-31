@@ -2,6 +2,7 @@ package org.tictactoe.domain.service;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.tictactoe.datasource.repository.UserRepository;
 import org.tictactoe.domain.model.JwtAuthentication;
 import org.tictactoe.domain.model.User;
 import org.tictactoe.web.model.JwtRequest;
@@ -9,8 +10,12 @@ import org.tictactoe.web.model.JwtResponse;
 import org.tictactoe.web.model.RefreshJwtRequest;
 import org.tictactoe.web.model.SignUpRequest;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -18,16 +23,21 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     private final JwtProvider jwtProvider;
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+
+    // Хранилище для отозванных токенов (в реальном приложении используйте Redis или БД)
+    private final Map<String, LocalDateTime> revokedTokens = new ConcurrentHashMap<>();
 
     public AuthServiceImpl(UserService userService,
                            JwtProvider jwtProvider,
-                           JwtUtil jwtUtil) {
+                           JwtUtil jwtUtil,
+                           UserRepository userRepository) {
         this.userService = userService;
         this.jwtProvider = jwtProvider;
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
-    // Регистрация (остаётся без изменений)
     @Override
     public boolean register(SignUpRequest request) {
         if (userService.existsByUsername(request.getUsername())) {
@@ -37,111 +47,125 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 
-    // Аутентификация с JWT
     @Override
     public JwtResponse login(JwtRequest request) {
-        // Проверяем пользователя
         if (!userService.validateUser(request.getUsername(), request.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Находим пользователя
         Optional<User> userOpt = userService.findByUsername(request.getUsername());
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
         }
 
         User user = userOpt.get();
-
-        // Генерируем токены
         String accessToken = jwtProvider.generateAccessToken(user);
         String refreshToken = jwtProvider.generateRefreshToken(user);
 
         return new JwtResponse(accessToken, refreshToken);
     }
 
-    // Обновление Access Token
     @Override
     public JwtResponse getNewAccessToken(String refreshToken) {
-        // Валидируем refresh token
+        // Проверяем, не отозван ли токен
+        if (isTokenRevoked(refreshToken)) {
+            throw new RuntimeException("Refresh token has been revoked");
+        }
+
         if (!jwtProvider.validateRefreshToken(refreshToken)) {
             throw new RuntimeException("Invalid refresh token");
         }
 
-        // Получаем claims
         var claims = jwtProvider.getRefreshClaims(refreshToken);
         String userIdStr = claims.get("userId", String.class);
         UUID userId = UUID.fromString(userIdStr);
 
-        // Находим пользователя
+        // Проверяем, существует ли пользователь
         Optional<User> userOpt = userService.findById(userId);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
         }
 
         User user = userOpt.get();
-
-        // Генерируем новый access token
         String newAccessToken = jwtProvider.generateAccessToken(user);
 
-        // Возвращаем старый refresh token (по ТЗ refresh token остаётся тем же)
         return new JwtResponse(newAccessToken, refreshToken);
     }
 
-    // Обновление Refresh Token
     @Override
     public JwtResponse getNewRefreshToken(String refreshToken) {
-        // Валидируем старый refresh token
+        // Проверяем, не отозван ли токен
+        if (isTokenRevoked(refreshToken)) {
+            throw new RuntimeException("Refresh token has been revoked");
+        }
+
+        // Отзываем старый токен
+        revokeToken(refreshToken);
+
         if (!jwtProvider.validateRefreshToken(refreshToken)) {
             throw new RuntimeException("Invalid refresh token");
         }
 
-        // Получаем claims
         var claims = jwtProvider.getRefreshClaims(refreshToken);
         String userIdStr = claims.get("userId", String.class);
         UUID userId = UUID.fromString(userIdStr);
 
-        // Находим пользователя
         Optional<User> userOpt = userService.findById(userId);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
         }
 
         User user = userOpt.get();
-
-        // Генерируем новые токены
         String newAccessToken = jwtProvider.generateAccessToken(user);
         String newRefreshToken = jwtProvider.generateRefreshToken(user);
 
         return new JwtResponse(newAccessToken, newRefreshToken);
     }
 
-    // Получение аутентификации (для фильтра)
     @Override
     public JwtAuthentication getAuthentication(String token) {
-        // Убираем префикс "Bearer " если есть
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
 
-        // Валидируем access token
+        // Проверяем, не отозван ли токен (для access токенов)
+        if (isTokenRevoked(token)) {
+            return null;
+        }
+
         if (!jwtProvider.validateAccessToken(token)) {
             return null;
         }
 
-        // Получаем claims
-        var claims = jwtProvider.getAccessClaims(token);
-
-        // Создаём аутентификацию
-        return jwtUtil.generateAuthentication(claims);
+        try {
+            var claims = jwtProvider.getAccessClaims(token);
+            return jwtUtil.generateAuthentication(claims);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    // Метод для получения текущего пользователя (удобно)
     public Optional<UUID> getCurrentUserId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UUID) {
             return Optional.of((UUID) authentication.getPrincipal());
         }
         return Optional.empty();
+    }
+
+    // Метод для отзыва токена
+    public void revokeToken(String token) {
+        revokedTokens.put(token, LocalDateTime.now());
+    }
+
+    // Метод для проверки отозван ли токен
+    private boolean isTokenRevoked(String token) {
+        return revokedTokens.containsKey(token);
+    }
+
+    // Метод для очистки старых отозванных токенов (можно вызывать по расписанию)
+    public void cleanupRevokedTokens() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(7);
+        revokedTokens.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoff));
     }
 }

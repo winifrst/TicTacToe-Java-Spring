@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.tictactoe.domain.model.JwtAuthentication;
 import org.tictactoe.domain.service.UserService;
 import org.tictactoe.web.model.UserResponse;
 import org.springframework.security.core.Authentication;
@@ -47,11 +48,11 @@ public class UserController {
                             examples = @ExampleObject(
                                     name = "Пример ответа",
                                     value = """
-                    {
-                        "id": "123e4567-e89b-12d3-a456-426614174000",
-                        "username": "testuser"
-                    }
-                    """
+                                            {
+                                                "id": "123e4567-e89b-12d3-a456-426614174000",
+                                                "username": "testuser"
+                                            }
+                                            """
                             )
                     )
             ),
@@ -74,34 +75,28 @@ public class UserController {
         }
     }
 
-
     @GetMapping("/me")
     @Operation(
-            summary = "Получить информацию о текущем пользователе",
-            description = "Возвращает информацию о текущем аутентифицированном пользователе."
+            summary = "Получение информации о текущем пользователе",
+            security = @SecurityRequirement(name = "Bearer Authentication")
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Информация о текущем пользователе",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "Требуется авторизация")
-    })
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<UserResponse> getCurrentUser() {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UUID) {
-                UUID userId = (UUID) auth.getPrincipal();
-                return getUserInfo(userId);
-            }
-            return ResponseEntity.status(401).build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof JwtAuthentication jwtAuth) {
+            UUID userId = jwtAuth.getUserId();
+
+            return userService.findById(userId)
+                    .map(user -> {
+                        UserResponse response = new UserResponse();
+                        response.setId(user.getId());
+                        response.setUsername(user.getUsername());
+                        // Можно добавить другие поля
+                        return ResponseEntity.ok(response);
+                    })
+                    .orElse(ResponseEntity.notFound().build());
         }
+
+        return ResponseEntity.status(401).build();
     }
 }

@@ -1,21 +1,13 @@
 package org.tictactoe.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.tictactoe.domain.service.AuthService;
-import org.tictactoe.web.model.AuthResponse;
-import org.tictactoe.web.model.JwtRequest;
-import org.tictactoe.web.model.JwtResponse;
-import org.tictactoe.web.model.SignUpRequest;
-
-import java.util.UUID;
+import org.tictactoe.web.model.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -28,36 +20,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    @Operation(
-            summary = "Регистрация нового пользователя",
-            description = "Создает нового пользователя в системе. Логин должен быть уникальным."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Пользователь успешно зарегистрирован",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class),
-                            examples = @ExampleObject(
-                                    name = "Успешная регистрация",
-                                    value = "{\"message\": \"User registered successfully\"}"
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Логин уже существует",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class),
-                            examples = @ExampleObject(
-                                    name = "Ошибка регистрации",
-                                    value = "{\"message\": \"Username already exists\"}"
-                            )
-                    )
-            )
-    })
+    @Operation(summary = "Регистрация нового пользователя")
     public ResponseEntity<AuthResponse> signUp(@RequestBody SignUpRequest request) {
         boolean success = authService.register(request);
 
@@ -72,37 +35,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(
-            summary = "Авторизация пользователя",
-            description = "Аутентификация пользователя с использованием Basic Authentication. " +
-                    "Логин и пароль должны быть закодированы в base64 в формате login:password"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Успешная аутентификация",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class),
-                            examples = @ExampleObject(
-                                    name = "Успешный вход",
-                                    value = "{\"id\": \"123e4567-e89b-12d3-a456-426614174000\", \"message\": \"Authentication successful\"}"
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Неверные учетные данные",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class),
-                            examples = @ExampleObject(
-                                    name = "Ошибка аутентификации",
-                                    value = "{\"message\": \"Invalid credentials\"}"
-                            )
-                    )
-            )
-    })
+    @Operation(summary = "Авторизация пользователя (получение токенов)")
     public ResponseEntity<?> login(@RequestBody JwtRequest request) {
         try {
             JwtResponse jwtResponse = authService.login(request);
@@ -110,6 +43,32 @@ public class AuthController {
         } catch (Exception e) {
             AuthResponse errorResponse = new AuthResponse();
             errorResponse.setMessage("Invalid credentials: " + e.getMessage());
+            return ResponseEntity.status(401).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/refresh/access")
+    @Operation(summary = "Обновление access токена")
+    public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshJwtRequest request) {
+        try {
+            JwtResponse jwtResponse = authService.getNewAccessToken(request.getRefreshToken());
+            return ResponseEntity.ok(jwtResponse);
+        } catch (Exception e) {
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage("Invalid refresh token: " + e.getMessage());
+            return ResponseEntity.status(401).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Обновление refresh токена")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshJwtRequest request) {
+        try {
+            JwtResponse jwtResponse = authService.getNewRefreshToken(request.getRefreshToken());
+            return ResponseEntity.ok(jwtResponse);
+        } catch (Exception e) {
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage("Invalid refresh token: " + e.getMessage());
             return ResponseEntity.status(401).body(errorResponse);
         }
     }

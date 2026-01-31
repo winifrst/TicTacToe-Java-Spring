@@ -14,32 +14,21 @@ import java.util.stream.Collectors;
 public class JwtUtil {
 
     public JwtAuthentication generateAuthentication(Claims claims) {
-        // Извлекаем данные из claims
         String userIdStr = claims.get("userId", String.class);
         String username = claims.get("username", String.class);
 
-        // Получаем роли
         List<String> roles = claims.get("roles", List.class);
         List<GrantedAuthority> authorities = roles.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        // Создаём аутентификацию
         UUID userId = UUID.fromString(userIdStr);
-        JwtAuthentication authentication = new JwtAuthentication(userId, username, authorities);
+        JwtAuthentication authentication = new JwtAuthentication();
+        authentication.setUserId(userId);
+        authentication.setUsername(username);
+        authentication.setAuthorities(authorities);
         authentication.setAuthenticated(true);
 
         return authentication;
-    }
-
-    // Метод для получения userId из claims
-    public UUID getUserId(Claims claims) {
-        String userIdStr = claims.get("userId", String.class);
-        return UUID.fromString(userIdStr);
-    }
-
-    // Метод для получения username из claims
-    public String getUsername(Claims claims) {
-        return claims.get("username", String.class);
     }
 }
