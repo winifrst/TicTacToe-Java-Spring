@@ -27,12 +27,36 @@ public class AuthFilter extends OncePerRequestFilter {
         return path.startsWith("/auth/") ||
                 path.equals("/refresh") ||
                 path.contains("swagger") ||
+                path.contains("swagger-ui") ||
                 path.contains("api-docs") ||
                 path.contains("webjars") ||
                 path.contains("swagger-resources") ||
                 path.contains("configuration/") ||
                 path.equals("/swagger-ui.html");
     }
+
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest request,
+//                                    HttpServletResponse response,
+//                                    FilterChain filterChain)
+//            throws ServletException, IOException {
+//
+//        String token = getTokenFromRequest(request);
+//
+//        if (token != null) {
+//            try {
+//                JwtAuthentication authentication = authService.getAuthentication(token);
+//
+//                if (authentication != null && authentication.isAuthenticated()) {
+//                    SecurityContextHolder.getContext().setAuthentication(authentication);
+//                }
+//            } catch (Exception e) {
+//                logger.error("Error processing JWT token", e);
+//            }
+//        }
+//
+//        filterChain.doFilter(request, response);
+//    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -41,10 +65,15 @@ public class AuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String token = getTokenFromRequest(request);
+        String path = request.getRequestURI();
+
+        System.out.println("Processing request to: " + path);
+        System.out.println("Token present: " + (token != null));
 
         if (token != null) {
             try {
                 JwtAuthentication authentication = authService.getAuthentication(token);
+                System.out.println("Authentication result: " + (authentication != null));
 
                 if (authentication != null && authentication.isAuthenticated()) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -56,6 +85,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
 
     private String getTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");

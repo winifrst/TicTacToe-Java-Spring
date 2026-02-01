@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
         user.setUsername(username);
         user.setPassword(password);
 
-        user.addRole(Role.USER);
+        user.addRole(Role.ROLE_USER);
 
         userRepository.save(UserMapper.toEntity(user));
         return user;

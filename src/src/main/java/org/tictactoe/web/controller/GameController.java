@@ -174,6 +174,82 @@ public class GameController {
         }
     }
 
+//    @PostMapping("/new")
+//    @Operation(
+//            summary = "Создать новую игру",
+//            description = "Создает новую игровую сессию. Можно выбрать игру против компьютера или ожидание второго игрока."
+//    )
+//    @ApiResponses(value = {
+//            @ApiResponse(
+//                    responseCode = "200",
+//                    description = "Игра успешно создана",
+//                    content = @Content(
+//                            mediaType = "application/json",
+//                            schema = @Schema(implementation = GameResponse.class)
+//                    )
+//            ),
+//            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+//            @ApiResponse(responseCode = "400", description = "Ошибка при создании игры")
+//    })
+//@PreAuthorize("hasRole('USER')")
+//    public ResponseEntity<GameResponse> createGame(
+//            @Parameter(
+//                    description = """
+//            Тип противника:
+//            - **computer** - игра против ИИ
+//            - **human** - игра против другого игрока (ожидание подключения)
+//            """,
+//                    required = false,
+//                    schema = @Schema(
+//                            allowableValues = {"computer", "human"},
+//                            defaultValue = "computer",
+//                            example = "computer"
+//                    ),
+//                    examples = {
+//                            @ExampleObject(
+//                                    name = "Против компьютера",
+//                                    value = "computer",
+//                                    description = "Игра против искусственного интеллекта"
+//                            ),
+//                            @ExampleObject(
+//                                    name = "Против человека",
+//                                    value = "human",
+//                                    description = "Игра против другого игрока (мультиплеер)"
+//                            )
+//                    }
+//            )
+//            @RequestParam(defaultValue = "computer") String opponent) {
+//
+//        try {
+//            UUID userId = getCurrentUserId();
+//
+//            Game game = new Game();
+//            game.setPlayerXId(userId);
+//
+//            if ("computer".equalsIgnoreCase(opponent)) {
+//                game.setAgainstComputer(true);
+//                game.setStatus(GameStatus.PLAYER_X_TURN);
+//                game.setCurrentPlayerId(userId);
+//            } else {
+//                game.setAgainstComputer(false);
+//                game.setStatus(GameStatus.WAITING_FOR_PLAYERS);
+//            }
+//
+//            GameEntity savedEntity = gameRepository.save(GameMapper.toEntity(game));
+//            Game savedGame = GameMapper.toDomain(savedEntity);
+//
+//            GameResponse response = WebGameMapper.toResponseFromDomain(savedGame, userId);
+//            return ResponseEntity.ok(response);
+//
+//        } catch (RuntimeException e) {
+//            if (e.getMessage().equals("User not authenticated")) {
+//                return ResponseEntity.status(401).build();
+//            }
+//            GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to create game: " + e.getMessage());
+//            return ResponseEntity.badRequest().body(errorResponse);
+//        }
+//    }
+
     @PostMapping("/new")
     @Operation(
             summary = "Создать новую игру",
@@ -249,6 +325,7 @@ public class GameController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 
     @GetMapping("/available")
     @Operation(

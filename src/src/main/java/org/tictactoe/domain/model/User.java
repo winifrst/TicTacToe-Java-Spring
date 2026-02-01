@@ -10,12 +10,13 @@ public class User {
     private UUID id;
     private String username;
     private String password;
+    private Set<Role> roles = new HashSet<>(Set.of(Role.ROLE_USER)); // ← ЗДЕСЬ!
 
-    private Set<Role> roles = new HashSet<>();
+//    private Set<Role> roles = new HashSet<>();
 
-    public User() {
-        this.roles.add(Role.USER);
-    }
+//    public User() {
+//        this.roles.add(Role.USER);
+//    }
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
