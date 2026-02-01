@@ -1,17 +1,18 @@
 {
 	"info": {
-		"_postman_id": "7065756f-d105-4ae7-8a3d-ba33378c30fa",
-		"name": "TicTacToe_2",
+		"_postman_id": "84deeb4f-cce5-415f-816c-c3b56f12b7e1",
+		"name": "TicTacToe_JWT",
+		"description": "# 🚀 Get started here\n\nThis template guides you through CRUD operations (GET, POST, PUT, DELETE), variables, and tests.\n\n## 🔖 **How to use this template**\n\n#### **Step 1: Send requests**\n\nRESTful APIs allow you to perform CRUD operations using the POST, GET, PUT, and DELETE HTTP methods.\n\nThis collection contains each of these [request](https://learning.postman.com/docs/sending-requests/requests/) types. Open each request and click \"Send\" to see what happens.\n\n#### **Step 2: View responses**\n\nObserve the response tab for status code (200 OK), response time, and size.\n\n#### **Step 3: Send new Body data**\n\nUpdate or add new data in \"Body\" in the POST request. Typically, Body data is also used in PUT request.\n\n```\n{\n    \"name\": \"Add your name in the body\"\n}\n\n ```\n\n#### **Step 4: Update the variable**\n\nVariables enable you to store and reuse values in Postman. We have created a [variable](https://learning.postman.com/docs/sending-requests/variables/) called `base_url` with the sample request [https://postman-api-learner.glitch.me](https://postman-api-learner.glitch.me). Replace it with your API endpoint to customize this collection.\n\n#### **Step 5: Add tests in the \"Scripts\" tab**\n\nAdding tests to your requests can help you confirm that your API is working as expected. You can write test scripts in JavaScript and view the output in the \"Test Results\" tab.\n\n<img src=\"https://content.pstmn.io/fa30ea0a-373d-4545-a668-e7b283cca343/aW1hZ2UucG5n\" alt=\"\" height=\"1530\" width=\"2162\">\n\n## 💪 Pro tips\n\n- Use folders to group related requests and organize the collection.\n    \n- Add more [scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/) to verify if the API works as expected and execute workflows.\n    \n\n## 💡Related templates\n\n[API testing basics](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9a37a28-055b-49cd-8c7e-97494a21eb54&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  \n[API documentation](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9c28f47-1253-44af-a2f3-20dce4da1f18&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  \n[Authorization methods](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=31a9a6ed-4cdf-4ced-984c-d12c9aec1c27&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "50481283",
-		"_collection_link": "https://winifrst-5be2859a-2822992.postman.co/workspace/%D0%9F%D0%B5%D1%82%D1%80-%D0%A1%D1%83%D0%B2%D0%BE%D1%80%D0%B8%D0%BD's-Workspace~cb1f4236-e40b-4552-82ae-fa62713b6f58/collection/50481283-7065756f-d105-4ae7-8a3d-ba33378c30fa?action=share&source=collection_link&creator=50481283"
+		"_collection_link": "https://winifrst-5be2859a-2822992.postman.co/workspace/%25D0%259F%25D0%25B5%25D1%2582%25D1%2580-%25D0%25A1%25D1%2583%25D0%25B2%25D0%25BE%25D1%2580%25D0%25B8%25D0%25BD's-Workspace~cb1f4236-e40b-4552-82ae-fa62713b6f58/collection/50481283-84deeb4f-cce5-415f-816c-c3b56f12b7e1?action=share&source=collection_link&creator=50481283"
 	},
 	"item": [
 		{
 			"name": "Login & auth",
 			"item": [
 				{
-					"name": "Register user successfully (POSITIVE)",
+					"name": "+ Register user 1",
 					"event": [
 						{
 							"listen": "test",
@@ -21,14 +22,10 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"// Создаем Base64",
-									"const username = pm.environment.get(\"username\");",
-									"const password = pm.environment.get(\"password\");",
-									"const credentials = btoa(`${username}:${password}`);",
-									"",
-									"// Сохраняем для следующих запросов",
-									"pm.environment.set(\"authHeader\", `Basic ${credentials}`);",
-									"console.log(\"Credentials saved for:\", username);"
+									"pm.test(\"User registered successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.eql(\"User registered successfully\");",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -41,12 +38,12 @@
 								"exec": [
 									"// Генерируем уникальное имя пользователя",
 									"const timestamp = Date.now();",
-									"const username = `user_${timestamp}`;",
-									"const password = `password123_${timestamp}`;",
+									"const username = `generated_user_${timestamp}`;",
+									"const password = `password_${timestamp}`;",
 									"",
 									"// Сохраняем в переменные",
-									"pm.environment.set(\"username\", username);",
-									"pm.environment.set(\"password\", password);",
+									"pm.environment.set(\"generated_user_1\", username);",
+									"pm.environment.set(\"password_1\", password);",
 									"",
 									"console.log(\"Generated user:\", username);"
 								],
@@ -57,11 +54,14 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+							"raw": "{\n    \"username\": \"{{generated_user_1}}\",\n    \"password\": \"{{password_1}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -82,7 +82,7 @@
 					"response": []
 				},
 				{
-					"name": "Register with the same login RETURN 400 (NEGATIVE)",
+					"name": "- Register same user",
 					"event": [
 						{
 							"listen": "test",
@@ -92,69 +92,8 @@
 									"    pm.response.to.have.status(400);",
 									"});",
 									"",
-									"pm.test(\"Error message\", () => {",
-									"    const json = pm.response.json();",
-									"    pm.expect(json.message).to.include(\"already exists\");",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/signup",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"signup"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "New auth (POSITIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Has user ID\", () => {",
-									"    const json = pm.response.json();",
-									"    pm.expect(json.id).to.not.be.null;",
-									"    pm.expect(json.message).to.include(\"successful\");",
-									"    pm.environment.set(\"userId\", json.id);",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"Username already exists\");",
 									"});"
 								],
 								"type": "text/javascript",
@@ -176,34 +115,87 @@
 					],
 					"request": {
 						"auth": {
-							"type": "apikey",
-							"apikey": [
-								{
-									"key": "key",
-									"value": "",
-									"type": "string"
-								},
-								{
-									"key": "value",
-									"value": "",
-									"type": "string"
-								}
-							]
+							"type": "noauth"
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							},
-							{
-								"key": "",
-								"value": "",
-								"type": "text",
-								"disabled": true
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{generated_user_1}}\",\n    \"password\": \"{{password_1}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
 							}
-						],
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/signup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Auth as user 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.type).to.equal(\"Bearer\");",
+									"    pm.expect(json.accessToken).to.not.be.empty;",
+									"    pm.expect(json.refreshToken).to.not.be.empty;",
+									"",
+									"    // Сохраняем токены",
+									"    pm.environment.set(\"access_token_1\", json.accessToken);",
+									"    pm.environment.set(\"refresh_token_1\", json.refreshToken);",
+									"    pm.environment.set(\"bearer_token_1\", `Bearer ${json.accessToken}`);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{generated_user_1}}\",\n    \"password\": \"{{password_1}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
 							"host": [
@@ -218,7 +210,68 @@
 					"response": []
 				},
 				{
-					"name": "Register 2nd player successfully (POSITIVE)",
+					"name": "- Auth with wrong password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Has error message\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.message).contain(\"Invalid credentials\")",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{generated_user_1}}\",\n    \"password\": \"wrong_password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Get me",
 					"event": [
 						{
 							"listen": "test",
@@ -228,14 +281,296 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"// Создаем Base64",
-									"const username2 = pm.environment.get(\"username2\");",
-									"const password2 = pm.environment.get(\"password2\");",
-									"const credentials2 = btoa(`${username2}:${password2}`);",
+									"const username = pm.environment.get(\"generated_user_1\");",
 									"",
-									"// Сохраняем для следующих запросов",
-									"pm.environment.set(\"authHeader2\", `Basic ${credentials2}`);",
-									"console.log(\"Credentials saved for:\", username2);"
+									"pm.test(\"Your test name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.username).to.eql(username);",
+									"});",
+									"",
+									"pm.test(\"save_id\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.environment.set(\"user_1_id\", json.id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/user/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Get other user info",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const username = pm.environment.get(\"generated_user_1\");",
+									"",
+									"pm.test(\"Your test name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.username).to.eql(username);",
+									"});",
+									"",
+									"pm.test(\"save_id\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.environment.set(\"user_1_id\", json.id);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_2}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/user/{{user_1_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"{{user_1_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "- Get me with no auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept-Encoding",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{generated_user_1}}\",\n    \"password\": \"{{password_1}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "- Get me with no auth Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Accept-Encoding",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{generated_user_1}}\",\n    \"password\": \"{{password_1}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Register user 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User registered successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.eql(\"User registered successfully\");",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -248,13 +583,14 @@
 								"exec": [
 									"// Генерируем уникальное имя пользователя",
 									"const timestamp = Date.now();",
-									"const username2 = `user_${timestamp}`;",
-									"const password2 = `password123_${timestamp}`;",
+									"const username = `generated_user_${timestamp}`;",
+									"const password = `password_${timestamp}`;",
 									"",
 									"// Сохраняем в переменные",
-									"pm.environment.set(\"username2\", username2);",
-									"pm.environment.set(\"password2\", password2);",
-									""
+									"pm.environment.set(\"generated_user_2\", username);",
+									"pm.environment.set(\"password_2\", password);",
+									"",
+									"console.log(\"Generated user 2:\", username);"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -263,11 +599,14 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{username2}}\",\n    \"password\": \"{{password2}}\"\n}",
+							"raw": "{\n    \"username\": \"{{generated_user_2}}\",\n    \"password\": \"{{password_2}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -288,7 +627,7 @@
 					"response": []
 				},
 				{
-					"name": "New auth 2nd player (POSITIVE)",
+					"name": "+ Auth as user 2",
 					"event": [
 						{
 							"listen": "test",
@@ -298,11 +637,20 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Has user ID\", () => {",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
 									"    const json = pm.response.json();",
-									"    pm.expect(json.id).to.not.be.null;",
-									"    pm.expect(json.message).to.include(\"successful\");",
-									"    pm.environment.set(\"userId2\", json.id);",
+									"    pm.expect(json.type).to.equal(\"Bearer\");",
+									"    pm.expect(json.accessToken).to.not.be.empty;",
+									"    pm.expect(json.refreshToken).to.not.be.empty;",
+									"",
+									"    // Сохраняем токены",
+									"    pm.environment.set(\"access_token_2\", json.accessToken);",
+									"    pm.environment.set(\"refresh_token_2\", json.refreshToken);",
+									"    pm.environment.set(\"bearer_token_2\", `Bearer ${json.accessToken}`);",
 									"});"
 								],
 								"type": "text/javascript",
@@ -324,34 +672,19 @@
 					],
 					"request": {
 						"auth": {
-							"type": "apikey",
-							"apikey": [
-								{
-									"key": "key",
-									"value": "",
-									"type": "string"
-								},
-								{
-									"key": "value",
-									"value": "",
-									"type": "string"
-								}
-							]
+							"type": "noauth"
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader2}}",
-								"type": "text"
-							},
-							{
-								"key": "",
-								"value": "",
-								"type": "text",
-								"disabled": true
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{generated_user_2}}\",\n    \"password\": \"{{password_2}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
 							}
-						],
+						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
 							"host": [
@@ -366,31 +699,27 @@
 					"response": []
 				},
 				{
-					"name": "Auth with invalid password RETURN 401 (NEGATIVE)",
+					"name": "+ Update access token 1",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 401\", function () {",
-									"    pm.response.to.have.status(401);",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Error message\", () => {",
+									"pm.test(\"Has JWT tokens\", () => {",
 									"    const json = pm.response.json();",
-									"    pm.expect(json.message).to.include(\"Invalid credentials\");",
+									"    pm.expect(json.type).to.equal(\"Bearer\");",
+									"    pm.expect(json.accessToken).to.not.be.empty;",
+									"    pm.expect(json.refreshToken).to.not.be.empty;",
+									"",
+									"    // Сохраняем токены",
+									"    pm.environment.set(\"new_access_token_1\", json.accessToken);",
+									"    // pm.environment.set(\"refresh_token_1\", json.refreshToken);",
+									"    // pm.environment.set(\"bearer_token_1\", `Bearer ${json.accessToken}`);",
 									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -400,37 +729,201 @@
 					],
 					"request": {
 						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "password",
-									"value": "fakepass",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "user",
-									"type": "string"
-								}
-							]
+							"type": "noauth"
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "",
-								"value": "",
-								"type": "text",
-								"disabled": true
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token_1}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
 							}
-						],
+						},
 						"url": {
-							"raw": "{{baseUrl}}/auth/login",
+							"raw": "{{baseUrl}}/auth/refresh/access",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"auth",
-								"login"
+								"refresh",
+								"access"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Update access token 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.type).to.equal(\"Bearer\");",
+									"    pm.expect(json.accessToken).to.not.be.empty;",
+									"    pm.expect(json.refreshToken).to.not.be.empty;",
+									"",
+									"    // Сохраняем токены",
+									"    pm.environment.set(\"new_access_token_2\", json.accessToken);",
+									"    // pm.environment.set(\"refresh_token_1\", json.refreshToken);",
+									"    // pm.environment.set(\"bearer_token_1\", `Bearer ${json.accessToken}`);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token_2}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh/access",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh",
+								"access"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Update refresh token 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.type).to.equal(\"Bearer\");",
+									"    pm.expect(json.accessToken).to.not.be.empty;",
+									"    pm.expect(json.refreshToken).to.not.be.empty;",
+									"",
+									"    // Сохраняем токены",
+									"    pm.environment.set(\"new_access_token_1\", json.accessToken);",
+									"    pm.environment.set(\"refresh_token_1\", json.refreshToken);",
+									"    pm.environment.set(\"bearer_token_1\", `Bearer ${json.accessToken}`);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token_1}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Update refresh token 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.type).to.equal(\"Bearer\");",
+									"    pm.expect(json.accessToken).to.not.be.empty;",
+									"    pm.expect(json.refreshToken).to.not.be.empty;",
+									"",
+									"    // Сохраняем токены",
+									"    pm.environment.set(\"new_access_token_2\", json.accessToken);",
+									"    pm.environment.set(\"refresh_token_2\", json.refreshToken);",
+									"    pm.environment.set(\"bearer_token_2\", `Bearer ${json.accessToken}`);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token_2}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh/access",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh",
+								"access"
 							]
 						}
 					},
@@ -442,7 +935,7 @@
 			"name": "Singleplayer",
 			"item": [
 				{
-					"name": "New game with computer (POSITIVE)",
+					"name": "+ New game as player 1",
 					"event": [
 						{
 							"listen": "test",
@@ -452,60 +945,13 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Game created & wait for 2nd player\", () => {",
+									"pm.test(\"Has JWT tokens\", () => {",
 									"    const json = pm.response.json();",
-									"    pm.expect(json.gameId).to.not.be.null;",
 									"    pm.expect(json.status).to.equal(\"PLAYER_X_TURN\");",
-									"    pm.expect(json.playerSymbol).to.equal(\"X\");",
-									"    pm.expect(json.board).to.eql([[0,0,0],[0,0,0],[0,0,0]]);",
-									"    pm.environment.set(\"gameIdWithComp\", json.gameId);",
-									"});",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"// console.log(\"=== DEBUG NEW GAME REQUEST ===\");",
 									"",
-									"// // 1. Проверяем переменные окружения",
-									"// console.log(\"Environment variables:\");",
-									"// console.log(\"authHeader =\", pm.environment.get(\"authHeader\"));",
-									"// console.log(\"username =\", pm.environment.get(\"username\"));",
-									"// console.log(\"password =\", pm.environment.get(\"password\"));",
-									"// console.log(\"userId =\", pm.environment.get(\"userId\"));",
-									"",
-									"// // 2. Проверяем заголовки, которые будут отправлены",
-									"// console.log(\"\\nRequest headers:\");",
-									"// const headers = pm.request.headers;",
-									"// headers.each(header => {",
-									"//     if (header.key === \"Authorization\") {",
-									"//         console.log(`${header.key}: ${header.value}`);",
-									"        ",
-									"//         // Декодируем Base64 для проверки",
-									"//         const authValue = header.value;",
-									"//         if (authValue && authValue.startsWith(\"Basic \")) {",
-									"//             const base64Part = authValue.substring(6);",
-									"//             try {",
-									"//                 const decoded = atob(base64Part);",
-									"//                 console.log(\"Decoded credentials:\", decoded);",
-									"//                 const [user, pass] = decoded.split(\":\");",
-									"//                 console.log(\"Username from header:\", user);",
-									"//                 console.log(\"Password from header:\", pass);",
-									"//             } catch (e) {",
-									"//                 console.log(\"Error decoding Base64:\", e.message);",
-									"//             }",
-									"//         }",
-									"//     }",
-									"// });",
-									"",
-									"// // 3. Проверяем URL",
-									"// console.log(\"\\nRequest URL:\", pm.request.url.toString());"
+									"    // Сохраняем айди игры",
+									"    pm.environment.set(\"game_id_single\", json.gameId);",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -514,208 +960,18 @@
 						}
 					],
 					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/game/new?opponent=computer",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"new"
-							],
-							"query": [
+						"auth": {
+							"type": "bearer",
+							"bearer": [
 								{
-									"key": "opponent",
-									"value": "computer"
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
 								}
 							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "First move (POSITIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
+						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"{{gameIdWithComp}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Forbidden move (NEGATIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 400\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": []
-						},
-						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"{{gameIdWithComp}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "New game without auth RETURN 401 (NEGATIVE)",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"// console.log(\"=== DEBUG NEW GAME REQUEST ===\");",
-									"",
-									"// // 1. Проверяем переменные окружения",
-									"// console.log(\"Environment variables:\");",
-									"// console.log(\"authHeader =\", pm.environment.get(\"authHeader\"));",
-									"// console.log(\"username =\", pm.environment.get(\"username\"));",
-									"// console.log(\"password =\", pm.environment.get(\"password\"));",
-									"// console.log(\"userId =\", pm.environment.get(\"userId\"));",
-									"",
-									"// // 2. Проверяем заголовки, которые будут отправлены",
-									"// console.log(\"\\nRequest headers:\");",
-									"// const headers = pm.request.headers;",
-									"// headers.each(header => {",
-									"//     if (header.key === \"Authorization\") {",
-									"//         console.log(`${header.key}: ${header.value}`);",
-									"        ",
-									"//         // Декодируем Base64 для проверки",
-									"//         const authValue = header.value;",
-									"//         if (authValue && authValue.startsWith(\"Basic \")) {",
-									"//             const base64Part = authValue.substring(6);",
-									"//             try {",
-									"//                 const decoded = atob(base64Part);",
-									"//                 console.log(\"Decoded credentials:\", decoded);",
-									"//                 const [user, pass] = decoded.split(\":\");",
-									"//                 console.log(\"Username from header:\", user);",
-									"//                 console.log(\"Password from header:\", pass);",
-									"//             } catch (e) {",
-									"//                 console.log(\"Error decoding Base64:\", e.message);",
-									"//             }",
-									"//         }",
-									"//     }",
-									"// });",
-									"",
-									"// // 3. Проверяем URL",
-									"// console.log(\"\\nRequest URL:\", pm.request.url.toString());"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 401\", function () {",
-									"    pm.response.to.have.status(401);",
-									"});",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text",
-								"disabled": true
-							}
-						],
+						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/game/new",
 							"host": [
@@ -728,26 +984,10 @@
 						}
 					},
 					"response": []
-				}
-			]
-		},
-		{
-			"name": "Multiplayer",
-			"item": [
+				},
 				{
-					"name": "New game with human by 2nd player (POSITIVE)",
+					"name": "+ First move",
 					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						},
 						{
 							"listen": "test",
 							"script": {
@@ -756,17 +996,10 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Game created & wait for 2nd player\", () => {",
+									"pm.test(\"Has JWT tokens\", () => {",
 									"    const json = pm.response.json();",
-									"    pm.expect(json.gameId).to.not.be.null;",
-									"    pm.expect(json.status).to.equal(\"WAITING_FOR_PLAYERS\");",
-									"    pm.expect(json.playerSymbol).to.equal(\"X\");",
-									"    pm.expect(json.board).to.eql([[0,0,0],[0,0,0],[0,0,0]]);",
-									"    pm.environment.set(\"gameId\", json.gameId);",
-									"});",
-									"",
-									"const response = pm.response.json();",
-									"pm.environment.set(\"gameIdWithHuman\", response.gameId);"
+									"    pm.expect(json.status).to.equal(\"PLAYER_X_TURN\");",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {},
@@ -775,14 +1008,317 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader2}}",
-								"type": "text"
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
 							}
-						],
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{game_id_single}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{game_id_single}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "- Invalid move (no any move done)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"ERROR: Invalid move\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 2, 0],\n      [0, 0, 0]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{game_id_single}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{game_id_single}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "- Invalid move (2 moves done)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"ERROR: Invalid move\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 2, 0],\n      [1, 0, 1]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{game_id_single}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{game_id_single}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Second move",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"PLAYER_X_TURN\");",
+									"",
+									"    // Сохраняем айди игры",
+									"    pm.environment.set(\"game_id_single\", json.gameId);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 2, 0],\n      [0, 0, 1]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{game_id_single}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{game_id_single}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ Third move & lose",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"PLAYER_O_WON\");",
+									"",
+									"    // Сохраняем айди игры",
+									"    pm.environment.set(\"game_id_single\", json.gameId);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n    \"board\": [\n      [1, 2, 0],\n      [0, 2, 0],\n      [1, 0, 1]\n    ]\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{game_id_single}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{game_id_single}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Multiplayer",
+			"item": [
+				{
+					"name": "+ New game with human as player 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"WAITING_FOR_PLAYERS\");",
+									"",
+									"    // Сохраняем айди игры",
+									"    pm.environment.set(\"game_id_multiplay\", json.gameId);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/game/new?opponent=human",
 							"host": [
@@ -803,7 +1339,7 @@
 					"response": []
 				},
 				{
-					"name": "Join your own game (NEGATIVE)",
+					"name": "- Try to join to singleplayer",
 					"event": [
 						{
 							"listen": "test",
@@ -813,9 +1349,9 @@
 									"    pm.response.to.have.status(400);",
 									"});",
 									"",
-									"pm.test(\"Error message\", () => {",
+									"pm.test(\"Check error status\", () => {",
 									"    const json = pm.response.json();",
-									"    pm.expect(json.status).to.include(\"You are already in this game\");",
+									"    pm.expect(json.status).to.equal(\"ERROR: Game is not waiting for players\");",
 									"});"
 								],
 								"type": "text/javascript",
@@ -825,187 +1361,21 @@
 						}
 					],
 					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader2}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}/join",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"{{gameIdWithHuman}}",
-								"join"
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_2}}",
+									"type": "string"
+								}
 							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Join game as 1st player (POSITIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
+						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}/join",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"{{gameIdWithHuman}}",
-								"join"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Re-join game (NEGATIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 400\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Error message\", () => {",
-									"    const json = pm.response.json();",
-									"    pm.expect(json.status).to.include(\"Game is not waiting for players\");",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader2}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}/join",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"{{gameIdWithHuman}}",
-								"join"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Join singleplayer game RETURN 400 (NEGATIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 400\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});",
-									"",
-									"pm.test(\"Error message\", () => {",
-									"    const json = pm.response.json();",
-									"    pm.expect(json.status).to.include(\"Game is not waiting for players\");",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader2}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}/join",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"{{gameIdWithComp}}",
-								"join"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Move but it isn't my turn (NEGATIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 400\", function () {",
-									"    pm.response.to.have.status(400);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "  {\n    \"board\": [\n      [1, 2, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1013,20 +1383,21 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}",
+							"raw": "{{baseUrl}}/game/{{game_id_single}}/join",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"game",
-								"{{gameIdWithHuman}}"
+								"{{game_id_single}}",
+								"join"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "First move (POSITIVE)",
+					"name": "+ Join to multiplayer",
 					"event": [
 						{
 							"listen": "test",
@@ -1034,6 +1405,11 @@
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check status\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"PLAYER_X_TURN\");",
 									"});"
 								],
 								"type": "text/javascript",
@@ -1043,14 +1419,77 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_2}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader2}}",
-								"type": "text"
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
 							}
-						],
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game/{{game_id_multiplay}}/join",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game",
+								"{{game_id_multiplay}}",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "+ First move",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"PLAYER_O_TURN\");",
+									"    pm.expect(json.againstComputer).to.equal(false);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_1}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
@@ -1061,20 +1500,20 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}",
+							"raw": "{{baseUrl}}/game/{{game_id_multiplay}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"game",
-								"{{gameIdWithHuman}}"
+								"{{game_id_multiplay}}"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Second move (POSITIVE)",
+					"name": "+ Second move",
 					"event": [
 						{
 							"listen": "test",
@@ -1082,6 +1521,12 @@
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Has JWT tokens\", () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.status).to.equal(\"PLAYER_X_TURN\");",
+									"    pm.expect(json.againstComputer).to.equal(false);",
 									"});"
 								],
 								"type": "text/javascript",
@@ -1091,14 +1536,18 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearer_token_2}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "  {\n    \"board\": [\n      [1, 2, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }",
@@ -1109,187 +1558,49 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithHuman}}",
+							"raw": "{{baseUrl}}/game/{{game_id_multiplay}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"game",
-								"{{gameIdWithHuman}}"
+								"{{game_id_multiplay}}"
 							]
 						}
 					},
 					"response": []
 				}
 			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
 		},
 		{
-			"name": "Gets",
-			"item": [
-				{
-					"name": "Get available games (POSITIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/game/available",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"available"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get game info by GameId (POSITIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/game/{{gameIdWithComp}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"game",
-								"{{gameIdWithComp}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get me (POSITIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "  {\n    \"board\": [\n      [1, 0, 0],\n      [0, 0, 0],\n      [0, 0, 0]\n    ]\n  }"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/user/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"user",
-								"me"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get user info (POSITIVE)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{authHeader}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/user/{{userId2}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"user",
-								"{{userId2}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "id",
+			"value": "1"
+		},
+		{
+			"key": "base_url",
+			"value": "https://template.postman-echo.com"
 		}
 	]
 }

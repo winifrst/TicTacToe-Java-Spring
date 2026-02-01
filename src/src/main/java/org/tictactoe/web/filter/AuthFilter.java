@@ -35,29 +35,6 @@ public class AuthFilter extends OncePerRequestFilter {
                 path.equals("/swagger-ui.html");
     }
 
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request,
-//                                    HttpServletResponse response,
-//                                    FilterChain filterChain)
-//            throws ServletException, IOException {
-//
-//        String token = getTokenFromRequest(request);
-//
-//        if (token != null) {
-//            try {
-//                JwtAuthentication authentication = authService.getAuthentication(token);
-//
-//                if (authentication != null && authentication.isAuthenticated()) {
-//                    SecurityContextHolder.getContext().setAuthentication(authentication);
-//                }
-//            } catch (Exception e) {
-//                logger.error("Error processing JWT token", e);
-//            }
-//        }
-//
-//        filterChain.doFilter(request, response);
-//    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

@@ -61,7 +61,6 @@ public class JwtAuthentication implements Authentication {
         return userId != null ? userId.toString() : null;
     }
 
-    // Геттеры и сеттеры
     public UUID getUserId() {
         return userId;
     }

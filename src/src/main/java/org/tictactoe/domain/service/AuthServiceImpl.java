@@ -25,7 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
 
-    // Хранилище для отозванных токенов (в реальном приложении используйте Redis или БД)
+    // Хранилище для отозванных токенов
     private final Map<String, LocalDateTime> revokedTokens = new ConcurrentHashMap<>();
 
     public AuthServiceImpl(UserService userService,
