@@ -29,19 +29,20 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Добавьте CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Разрешить доступ без аутентификации
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/auth/refresh/**").permitAll()
+//                        .requestMatchers("/auth/refresh/**").permitAll()
                         .requestMatchers("/refresh").permitAll()
-
                         // Swagger
                         .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
+//                        .requestMatchers("/swagger-ui/*").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
+                                .requestMatchers("/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/webjars/**").permitAll()
                         .requestMatchers("/swagger-resources/**").permitAll()

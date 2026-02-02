@@ -1,65 +1,58 @@
 package org.tictactoe.web.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 
+@Schema(description = "Ответ с информацией о пользователе")
 public class UserResponse {
+    @Schema(description = "UUID пользователя", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID id;
+
+    @Schema(description = "Логин пользователя", example = "player1")
     private String username;
+
+    @Schema(description = "Количество сыгранных игр", example = "10")
     private int gamesPlayed;
-    private int gamesWon;
-    private int gamesLost;
-    private int gamesDrawn;
+
+    @Schema(description = "Количество побед", example = "7")
+    private int wins;
+
+    @Schema(description = "Количество поражений", example = "2")
+    private int losses;
+
+    @Schema(description = "Количество ничьих", example = "1")
+    private int draws;
+
+    @Schema(description = "Процент побед", example = "70.0")
+    private double winRate;
+
+    @Schema(description = "Позиция в таблице лидеров", example = "5", nullable = true)
+    private Integer leaderboardPosition;
 
     // Геттеры и сеттеры
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() {
-        return username;
-    }
+    public int getGamesPlayed() { return gamesPlayed; }
+    public void setGamesPlayed(int gamesPlayed) { this.gamesPlayed = gamesPlayed; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public int getWins() { return wins; }
+    public void setWins(int wins) { this.wins = wins; }
 
-    public int getGamesPlayed() {
-        return gamesPlayed;
-    }
+    public int getLosses() { return losses; }
+    public void setLosses(int losses) { this.losses = losses; }
 
-    public void setGamesPlayed(int gamesPlayed) {
-        this.gamesPlayed = gamesPlayed;
-    }
+    public int getDraws() { return draws; }
+    public void setDraws(int draws) { this.draws = draws; }
 
-    public int getGamesWon() {
-        return gamesWon;
-    }
+    public double getWinRate() { return winRate; }
+    public void setWinRate(double winRate) { this.winRate = winRate; }
 
-    public void setGamesWon(int gamesWon) {
-        this.gamesWon = gamesWon;
-    }
-
-    public int getGamesLost() {
-        return gamesLost;
-    }
-
-    public void setGamesLost(int gamesLost) {
-        this.gamesLost = gamesLost;
-    }
-
-    public int getGamesDrawn() {
-        return gamesDrawn;
-    }
-
-    public void setGamesDrawn(int gamesDrawn) {
-        this.gamesDrawn = gamesDrawn;
-    }
-
-    public double getWinRate() {
-        return gamesPlayed > 0 ? (double) gamesWon / gamesPlayed * 100 : 0;
+    public Integer getLeaderboardPosition() { return leaderboardPosition; }
+    public void setLeaderboardPosition(Integer leaderboardPosition) {
+        this.leaderboardPosition = leaderboardPosition;
     }
 }

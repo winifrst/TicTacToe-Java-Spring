@@ -26,12 +26,16 @@ public class AuthFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return path.startsWith("/auth/") ||
                 path.equals("/refresh") ||
-                path.contains("swagger") ||
-                path.contains("swagger-ui") ||
-                path.contains("api-docs") ||
                 path.contains("webjars") ||
                 path.contains("swagger-resources") ||
                 path.contains("configuration/") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/swagger-ui/") ||
+                path.startsWith("/api-docs") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/webjars/") ||
+                path.startsWith("/swagger-resources") ||
+                path.equals("/favicon.ico") ||
                 path.equals("/swagger-ui.html");
     }
 

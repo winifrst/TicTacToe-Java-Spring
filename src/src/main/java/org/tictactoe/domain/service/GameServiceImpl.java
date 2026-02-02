@@ -3,8 +3,9 @@ package org.tictactoe.domain.service;
 import org.springframework.stereotype.Service;
 import org.tictactoe.domain.model.Game;
 import org.tictactoe.domain.model.GameStatus;
-
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.tictactoe.domain.service.Constants.*;
 

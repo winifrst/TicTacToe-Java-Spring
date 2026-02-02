@@ -36,11 +36,6 @@ public class JwtProvider {
         claims.put("userId", user.getId().toString());
         claims.put("username", user.getUsername());
 
-//        List<String> roles = user.getAuthorities().stream()
-//                .map(GrantedAuthority::getAuthority)
-//                .collect(Collectors.toList());
-//        claims.put("roles", roles);
-
         List<String> roles = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());

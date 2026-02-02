@@ -2,6 +2,7 @@ package org.tictactoe.domain.service;
 
 import org.tictactoe.domain.model.Game;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface GameService {
@@ -22,4 +23,5 @@ public interface GameService {
     int getPlayerSymbol(Game game, UUID playerId);
 
     boolean isPlayerTurn(Game game, UUID playerId);
+
 }

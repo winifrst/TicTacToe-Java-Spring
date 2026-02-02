@@ -1,0 +1,1103 @@
+{
+	"info": {
+		"_postman_id": "tictactoe-stats-tests",
+		"name": "TicTacToe Stats API Tests",
+		"description": "Тесты для функционала статистики, истории игр и таблицы лидеров",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "📝 1. Регистрация и авторизация",
+			"item": [
+				{
+					"name": "Регистрация пользователя 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testplayer1\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "signup"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Регистрация пользователя 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testplayer2\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "signup"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Авторизация пользователя 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has access token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.accessToken).to.exist;",
+									"    pm.expect(jsonData.refreshToken).to.exist;",
+									"    pm.collectionVariables.set(\"access_token_user1\", jsonData.accessToken);",
+									"    pm.collectionVariables.set(\"user1_id\", \"\"); // Будет заполнено из токена",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testplayer1\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Авторизация пользователя 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has tokens\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.accessToken).to.exist;",
+									"    pm.expect(jsonData.refreshToken).to.exist;",
+									"    pm.collectionVariables.set(\"access_token_user2\", jsonData.accessToken);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testplayer2\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🎮 2. Создание тестовых игр",
+			"item": [
+				{
+					"name": "Создание мультиплеерной игры (пользователь 1)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Game created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.gameId).to.exist;",
+									"    pm.expect(jsonData.status).to.equal(\"WAITING_FOR_PLAYERS\");",
+									"    pm.expect(jsonData.againstComputer).to.be.false;",
+									"    pm.collectionVariables.set(\"multiplayer_game_id\", jsonData.gameId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/game/new?opponent=human",
+							"host": ["{{base_url}}"],
+							"path": ["game", "new"],
+							"query": [
+								{
+									"key": "opponent",
+									"value": "human"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Присоединение к игре (пользователь 2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Game joined successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.gameId).to.exist;",
+									"    pm.expect(jsonData.status).to.equal(\"PLAYER_X_TURN\");",
+									"    pm.expect(jsonData.playerSymbol).to.equal(\"O\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user2}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/game/{{multiplayer_game_id}}/join",
+							"host": ["{{base_url}}"],
+							"path": ["game", "{{multiplayer_game_id}}", "join"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Сыграть несколько ходов для завершения игры",
+					"item": [
+						{
+							"name": "Ход пользователя 1 (X) в центр",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user1}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"board\": [[0,0,0],[0,1,0],[0,0,0]]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/game/{{multiplayer_game_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["game", "{{multiplayer_game_id}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Ход пользователя 2 (O) в левый верхний угол",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user2}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"board\": [[2,0,0],[0,1,0],[0,0,0]]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/game/{{multiplayer_game_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["game", "{{multiplayer_game_id}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Ход пользователя 1 (X) в правый верхний угол - Победа!",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user1}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"board\": [[2,0,1],[0,1,0],[0,0,0]]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/game/{{multiplayer_game_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["game", "{{multiplayer_game_id}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Ход пользователя 2 (O) в левый нижний угол",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user2}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"board\": [[2,0,1],[0,1,0],[2,0,0]]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/game/{{multiplayer_game_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["game", "{{multiplayer_game_id}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Ход пользователя 1 (X) в левый нижний угол - Завершение игры",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Game completed - X won\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.gameId).to.exist;",
+											"    pm.expect(jsonData.status).to.equal(\"PLAYER_X_WON\");",
+											"    pm.collectionVariables.set(\"completed_game_id\", jsonData.gameId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user1}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"board\": [[2,0,1],[0,1,0],[2,0,1]]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/game/{{multiplayer_game_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["game", "{{multiplayer_game_id}}"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📊 3. Тестирование статистики пользователя",
+			"item": [
+				{
+					"name": "Получить статистику текущего пользователя (user1)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user stats\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.userId).to.exist;",
+									"    pm.expect(jsonData.username).to.equal(\"testplayer1\");",
+									"    pm.expect(jsonData.gamesPlayed).to.be.a('number');",
+									"    pm.expect(jsonData.wins).to.be.a('number');",
+									"    pm.expect(jsonData.winRate).to.be.a('number');",
+									"    pm.collectionVariables.set(\"user1_wins\", jsonData.wins);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/stats/me",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "me"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Получить статистику текущего пользователя (user2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user stats\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.userId).to.exist;",
+									"    pm.expect(jsonData.username).to.equal(\"testplayer2\");",
+									"    pm.expect(jsonData.gamesPlayed).to.equal(1);",
+									"    pm.expect(jsonData.wins).to.equal(0);",
+									"    pm.expect(jsonData.winRate).to.equal(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user2}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/stats/me",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "me"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Получить информацию о пользователе 1 через /user/{id}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user info with stats\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.exist;",
+									"    pm.expect(jsonData.username).to.equal(\"testplayer1\");",
+									"    pm.expect(jsonData.gamesPlayed).to.be.a('number');",
+									"    pm.expect(jsonData.wins).to.be.a('number');",
+									"    pm.expect(jsonData.winRate).to.be.a('number');",
+									"    pm.expect(jsonData.leaderboardPosition).to.be.a('number');",
+									"    pm.collectionVariables.set(\"user1_id\", jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user/{{user1_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["user", "{{user1_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📜 4. Тестирование истории игр",
+			"item": [
+				{
+					"name": "Получить историю игр пользователя 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test(\"Game history has correct structure\", function () {",
+									"    var games = pm.response.json();",
+									"    var firstGame = games[0];",
+									"    pm.expect(firstGame.gameId).to.exist;",
+									"    pm.expect(firstGame.finalBoard).to.be.an('array');",
+									"    pm.expect(firstGame.result).to.be.oneOf(['WIN', 'LOSS', 'DRAW']);",
+									"    pm.expect(firstGame.opponentUsername).to.equal('testplayer2');",
+									"    pm.expect(firstGame.gameDate).to.exist;",
+									"    pm.expect(firstGame.result).to.equal('WIN');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/stats/history",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "history"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Получить историю игр пользователя 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User 2 has lost game in history\", function () {",
+									"    var games = pm.response.json();",
+									"    pm.expect(games).to.be.an('array');",
+									"    pm.expect(games.length).to.be.at.least(1);",
+									"    var firstGame = games[0];",
+									"    pm.expect(firstGame.result).to.equal('LOSS');",
+									"    pm.expect(firstGame.opponentUsername).to.equal('testplayer1');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user2}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/stats/history",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "history"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Проверить, что игры с компьютером не попадают в историю",
+					"item": [
+						{
+							"name": "Создать игру с компьютером",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user1}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/game/new?opponent=computer",
+									"host": ["{{base_url}}"],
+									"path": ["game", "new"],
+									"query": [
+										{
+											"key": "opponent",
+											"value": "computer"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Проверить что игра с компьютером не в истории",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Computer games not in history\", function () {",
+											"    var games = pm.response.json();",
+											"    // Должна быть только одна игра (с пользователем 2)",
+											"    pm.expect(games.length).to.equal(1);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user1}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/stats/history",
+									"host": ["{{base_url}}"],
+									"path": ["stats", "history"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🏆 5. Тестирование таблицы лидеров",
+			"item": [
+				{
+					"name": "Получить таблицу лидеров (по умолчанию 10 записей)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Leaderboard is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test(\"Leaderboard entries have correct structure\", function () {",
+									"    var leaderboard = pm.response.json();",
+									"    var firstEntry = leaderboard[0];",
+									"    pm.expect(firstEntry.userId).to.exist;",
+									"    pm.expect(firstEntry.username).to.exist;",
+									"    pm.expect(firstEntry.gamesPlayed).to.be.a('number');",
+									"    pm.expect(firstEntry.wins).to.be.a('number');",
+									"    pm.expect(firstEntry.winRate).to.be.a('number');",
+									"    pm.expect(firstEntry.winRate).to.be.within(0, 100);",
+									"});",
+									"",
+									"pm.test(\"User 1 should be first (has win)\", function () {",
+									"    var leaderboard = pm.response.json();",
+									"    var firstEntry = leaderboard[0];",
+									"    pm.expect(firstEntry.username).to.equal('testplayer1');",
+									"    pm.expect(firstEntry.wins).to.equal(1);",
+									"    pm.expect(firstEntry.winRate).to.equal(100);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/stats/leaderboard",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "leaderboard"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Получить таблицу лидеров с limit=5",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Limit parameter works\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.length).to.be.at.most(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/stats/leaderboard?limit=5",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "leaderboard"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Получить позицию пользователя в таблице лидеров",
+					"item": [
+						{
+							"name": "Позиция пользователя 1",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"User 1 should be at position 1\", function () {",
+											"    var position = pm.response.json();",
+											"    pm.expect(position).to.equal(1);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user1}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/stats/leaderboard/position",
+									"host": ["{{base_url}}"],
+									"path": ["stats", "leaderboard", "position"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Позиция пользователя 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"User 2 should be at position 2\", function () {",
+											"    var position = pm.response.json();",
+											"    pm.expect(position).to.equal(2);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user2}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/stats/leaderboard/position",
+									"host": ["{{base_url}}"],
+									"path": ["stats", "leaderboard", "position"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🧪 6. Edge Cases и негативные тесты",
+			"item": [
+				{
+					"name": "Получить историю игр без авторизации",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/stats/history",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "history"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Получить таблицу лидеров с некорректным limit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 even with invalid limit\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Default limit used when invalid\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.length).to.be.at.most(10);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/stats/leaderboard?limit=-1",
+							"host": ["{{base_url}}"],
+							"path": ["stats", "leaderboard"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "-1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Получить статистику несуществующего пользователя",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token_user1}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user/00000000-0000-0000-0000-000000000000",
+							"host": ["{{base_url}}"],
+							"path": ["user", "00000000-0000-0000-0000-000000000000"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Создать несколько игр для проверки статистики",
+					"item": [
+						{
+							"name": "Создать еще одну мультиплеерную игру",
+							"request": {
+								"method": "POST",
+								"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Authorization",
+											"value": "Bearer {{access_token_user1}}"
+										}
+								],
+								"url": {
+									"raw": "{{base_url}}/game/new?opponent=human",
+									"host": ["{{base_url}}"],
+									"path": ["game", "new"],
+									"query": [
+										{
+											"key": "opponent",
+											"value": "human"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Присоединить пользователя 2",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user2}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/game/{{multiplayer_game_id}}/join",
+									"host": ["{{base_url}}"],
+									"path": ["game", "{{multiplayer_game_id}}", "join"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Проверить обновленную статистику",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Statistics updated correctly\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    // gamesPlayed должно увеличиться на 1",
+											"    var expectedGames = parseInt(pm.collectionVariables.get(\"user1_wins\")) + 1;",
+											"    pm.expect(jsonData.wins).to.equal(expectedGames);",
+											"    pm.expect(jsonData.winRate).to.equal(100);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token_user1}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/stats/me",
+									"host": ["{{base_url}}"],
+									"path": ["stats", "me"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"console.log('Starting TicTacToe Stats API Tests');"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"console.log('Test completed: ' + pm.info.requestName);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "access_token_user1",
+			"value": ""
+		},
+		{
+			"key": "access_token_user2",
+			"value": ""
+		},
+		{
+			"key": "multiplayer_game_id",
+			"value": ""
+		},
+		{
+			"key": "completed_game_id",
+			"value": ""
+		},
+		{
+			"key": "user1_id",
+			"value": ""
+		},
+		{
+			"key": "user1_wins",
+			"value": "0"
+		}
+	],
+	"auth": null
+}

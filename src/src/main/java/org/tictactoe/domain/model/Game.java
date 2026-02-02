@@ -1,10 +1,8 @@
 package org.tictactoe.domain.model;
 
 import org.tictactoe.domain.service.Constants;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import static org.tictactoe.domain.service.Constants.BOARD_SIZE;
 
 public class Game {
@@ -78,5 +76,11 @@ public class Game {
         if (isPlayerX(playerId)) return playerXSymbol;
         if (isPlayerO(playerId)) return playerOSymbol;
         return null;
+    }
+
+    public boolean isFinished() {
+        return status == GameStatus.PLAYER_X_WON ||
+                status == GameStatus.PLAYER_O_WON ||
+                status == GameStatus.DRAW;
     }
 }
