@@ -14,12 +14,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.tictactoe.datasource.mapper.GameMapper;
-import org.tictactoe.datasource.model.GameEntity;
-import org.tictactoe.datasource.repository.GameRepository;
 import org.tictactoe.domain.model.Game;
 import org.tictactoe.domain.model.GameStatus;
 import org.tictactoe.domain.service.GameService;
+import org.tictactoe.domain.service.GameManagementService;
 import org.tictactoe.web.model.GameRequest;
 import org.tictactoe.web.model.GameResponse;
 import org.tictactoe.web.webmapper.WebGameMapper;
@@ -28,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/game")
@@ -39,15 +36,16 @@ import java.util.stream.StreamSupport;
 @SecurityRequirement(name = "bearerAuth")
 public class GameController {
     private final GameService gameService;
-    private final GameRepository gameRepository;
+//    private final GameRepository gameRepository;
+    private final GameManagementService gameManagementService;
+
 
     public GameController(GameService gameService,
-                          GameRepository gameRepository) {
+                          GameManagementService gameManagementService) {
         this.gameService = gameService;
-        this.gameRepository = gameRepository;
+        this.gameManagementService = gameManagementService;
     }
 
-    // Получение userId из SecurityContext (вспомогательный метод)
     private UUID getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UUID) {
@@ -114,12 +112,12 @@ public class GameController {
         try {
             UUID userId = getCurrentUserId();
 
-            Optional<GameEntity> gameEntityOptional = gameRepository.findById(gameId);
-            if (gameEntityOptional.isEmpty()) {
+            Optional<Game> gameOpt = gameManagementService.findGameById(gameId);
+            if (gameOpt.isEmpty()) {
                 return ResponseEntity.status(404).build();
             }
 
-            Game game = GameMapper.toDomain(gameEntityOptional.get());
+            Game game = gameOpt.get();
 
             printBoard(game.getBoard());
             printBoard(request.getBoard());
@@ -144,10 +142,8 @@ public class GameController {
 
             game = gameService.makeMove(game, newMove[0], newMove[1], userId);
 
-            // Проверяем статус игры
             game = gameService.checkGameStatus(game);
 
-            // Если игра с компьютером
             if (game.isAgainstComputer() &&
                     game.getStatus() != GameStatus.PLAYER_X_WON &&
                     game.getStatus() != GameStatus.PLAYER_O_WON &&
@@ -157,11 +153,8 @@ public class GameController {
                 game = gameService.checkGameStatus(game);
             }
 
-            GameEntity updatedEntity = gameRepository.save(GameMapper.toEntity(game));
-            Game updatedGame = GameMapper.toDomain(updatedEntity);
-
-            GameResponse response = WebGameMapper.toResponseFromDomain(updatedGame, userId);
-
+            Game updatedGame = gameManagementService.saveGame(game);
+            GameResponse response = gameManagementService.convertToResponse(updatedGame, userId);
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
@@ -235,10 +228,8 @@ public class GameController {
                 game.setStatus(GameStatus.WAITING_FOR_PLAYERS);
             }
 
-            GameEntity savedEntity = gameRepository.save(GameMapper.toEntity(game));
-            Game savedGame = GameMapper.toDomain(savedEntity);
-
-            GameResponse response = WebGameMapper.toResponseFromDomain(savedGame, userId);
+            Game savedGame = gameManagementService.saveGame(game);
+            GameResponse response = gameManagementService.convertToResponse(savedGame, userId);
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
@@ -249,7 +240,6 @@ public class GameController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
-
 
     @GetMapping("/available")
     @Operation(
@@ -272,15 +262,9 @@ public class GameController {
     public ResponseEntity<List<GameResponse>> getAvailableGames() {
         try {
             UUID userId = getCurrentUserId();
-
-            List<Game> availableGames = StreamSupport.stream(gameRepository.findAll().spliterator(), false)
-                    .map(GameMapper::toDomain)
-                    .filter(game -> game.getStatus() == GameStatus.WAITING_FOR_PLAYERS)
-                    .filter(game -> !game.isPlayerX(userId))
-                    .collect(Collectors.toList());
-
+            List<Game> availableGames = gameManagementService.getAvailableGames(userId);
             List<GameResponse> responses = availableGames.stream()
-                    .map(game -> WebGameMapper.toResponseFromDomain(game, userId))
+                    .map(game -> gameManagementService.convertToResponse(game, userId))
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(responses);
@@ -315,13 +299,12 @@ public class GameController {
     public ResponseEntity<GameResponse> joinGame(@PathVariable UUID gameId) {
         try {
             UUID userId = getCurrentUserId();
-
-            Optional<GameEntity> gameEntityOpt = gameRepository.findById(gameId);
-            if (gameEntityOpt.isEmpty()) {
+            Optional<Game> gameOpt = gameManagementService.findGameById(gameId);
+            if (gameOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
-            Game game = GameMapper.toDomain(gameEntityOpt.get());
+            Game game = gameOpt.get();
 
             if (game.getStatus() != GameStatus.WAITING_FOR_PLAYERS) {
                 GameResponse errorResponse = WebGameMapper.toErrorResponse("Game is not waiting for players");
@@ -337,10 +320,8 @@ public class GameController {
             game.setStatus(GameStatus.PLAYER_X_TURN);
             game.setCurrentPlayerId(game.getPlayerXId());
 
-            GameEntity updatedEntity = gameRepository.save(GameMapper.toEntity(game));
-            Game updatedGame = GameMapper.toDomain(updatedEntity);
-
-            GameResponse response = WebGameMapper.toResponseFromDomain(updatedGame, userId);
+            Game updatedGame = gameManagementService.saveGame(game);
+            GameResponse response = gameManagementService.convertToResponse(updatedGame, userId);
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
@@ -376,18 +357,18 @@ public class GameController {
         try {
             UUID userId = getCurrentUserId();
 
-            Optional<GameEntity> gameEntityOpt = gameRepository.findById(gameId);
-            if (gameEntityOpt.isEmpty()) {
+            Optional<Game> gameOpt = gameManagementService.findGameById(gameId);
+            if (gameOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
-            Game game = GameMapper.toDomain(gameEntityOpt.get());
+            Game game = gameOpt.get();
 
             if (!gameService.isPlayerInGame(game, userId)) {
                 return ResponseEntity.status(403).build();
             }
 
-            GameResponse response = WebGameMapper.toResponseFromDomain(game, userId);
+            GameResponse response = gameManagementService.convertToResponse(game, userId);
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException e) {
