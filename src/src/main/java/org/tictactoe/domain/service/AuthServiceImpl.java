@@ -26,7 +26,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
 
     // Хранилище для отозванных токенов
-    private final Map<String, LocalDateTime> revokedTokens = new ConcurrentHashMap<>();
+        private final Map<String, LocalDateTime> revokedTokens = new ConcurrentHashMap<>();
 
     public AuthServiceImpl(UserService userService,
                            JwtProvider jwtProvider,
@@ -128,7 +128,6 @@ public class AuthServiceImpl implements AuthService {
             token = token.substring(7);
         }
 
-        // Проверяем, не отозван ли токен (для access токенов)
         if (isTokenRevoked(token)) {
             return null;
         }
@@ -145,14 +144,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    public Optional<UUID> getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UUID) {
-            return Optional.of((UUID) authentication.getPrincipal());
-        }
-        return Optional.empty();
-    }
-
     // Метод для отзыва токена
     public void revokeToken(String token) {
         revokedTokens.put(token, LocalDateTime.now());
@@ -163,7 +154,7 @@ public class AuthServiceImpl implements AuthService {
         return revokedTokens.containsKey(token);
     }
 
-    // Метод для очистки старых отозванных токенов (можно вызывать по расписанию)
+    // Метод для очистки старых отозванных токенов
     public void cleanupRevokedTokens() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(7);
         revokedTokens.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoff));

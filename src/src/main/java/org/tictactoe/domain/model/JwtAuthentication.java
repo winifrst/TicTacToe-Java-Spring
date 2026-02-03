@@ -13,7 +13,6 @@ public class JwtAuthentication implements Authentication {
     private String username;
     private Collection<? extends GrantedAuthority> authorities;
 
-    // Конструкторы
     public JwtAuthentication() {
         this.authenticated = false;
     }
@@ -38,7 +37,7 @@ public class JwtAuthentication implements Authentication {
 
     @Override
     public Object getDetails() {
-        return null; // Можно вернуть дополнительную информацию
+        return null;
     }
 
     @Override

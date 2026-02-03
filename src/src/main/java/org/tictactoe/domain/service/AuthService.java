@@ -24,6 +24,4 @@ public interface AuthService {
 
     // Получение аутентификации (для фильтра)
     JwtAuthentication getAuthentication(String token);
-
-//    public Optional<UUID> getCurrentUserId();
 }

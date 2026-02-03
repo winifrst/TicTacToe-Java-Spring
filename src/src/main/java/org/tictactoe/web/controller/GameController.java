@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 @SecurityRequirement(name = "bearerAuth")
 public class GameController {
     private final GameService gameService;
-//    private final GameRepository gameRepository;
     private final GameManagementService gameManagementService;
 
 
@@ -118,9 +117,6 @@ public class GameController {
             }
 
             Game game = gameOpt.get();
-
-            printBoard(game.getBoard());
-            printBoard(request.getBoard());
 
             if (!gameService.isPlayerInGame(game, userId)) {
                 return ResponseEntity.status(403).build();
@@ -389,15 +385,5 @@ public class GameController {
             }
         }
         return new int[]{-1, -1};
-    }
-
-    private void printBoard(int[][] board) {
-        for (int i = 0; i < board.length; i++) {
-            System.out.print("[");
-            for (int j = 0; j < board[i].length; j++) {
-                System.out.print(board[i][j]);
-                if (j < board[i].length - 1) System.out.print(", ");
-            }
-        }
     }
 }

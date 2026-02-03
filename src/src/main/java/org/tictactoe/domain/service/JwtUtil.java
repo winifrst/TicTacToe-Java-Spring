@@ -18,8 +18,7 @@ public class JwtUtil {
         String userIdStr = claims.get("userId", String.class);
         String username = claims.get("username", String.class);
 
-        // Важно: извлекаем роли из claims
-
+        // извлекаем роли из claims
 
         List<String> roles = claims.get("roles", List.class);
         if (roles == null) {

@@ -1,4 +1,3 @@
-// org.tictactoe.domain.service.StatisticsService.java
 package org.tictactoe.domain.service;
 
 import org.springframework.stereotype.Service;
@@ -23,7 +22,7 @@ public class StatisticsService {
         this.userRepository = userRepository;
     }
 
-    // Добавь в сервис для работы с играми метод для получения всех завершенных игр по UUID пользователя
+    // для работы с играми метод для получения всех завершенных игр по UUID пользователя
     public List<GameHistoryResponse> getFinishedGamesByUserId(UUID userId) {
         var gameEntities = gameRepository.findFinishedGamesByUserId(userId);
 

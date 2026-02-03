@@ -1,4 +1,3 @@
-// org.tictactoe.web.model.PlayerStatsResponse.java
 package org.tictactoe.web.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
