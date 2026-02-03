@@ -1,9 +1,9 @@
-// org.tictactoe.web.controller.UserController.java
 package org.tictactoe.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,6 +17,7 @@ import org.tictactoe.domain.model.JwtAuthentication;
 import org.tictactoe.domain.service.StatisticsService;
 import org.tictactoe.domain.service.UserService;
 import org.tictactoe.web.model.*;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,75 +37,6 @@ public class UserController {
     public UserController(UserService userService, StatisticsService statisticsService) {
         this.userService = userService;
         this.statisticsService = statisticsService;
-    }
-
-    @GetMapping("/{userId}")
-    @Operation(
-            summary = "Получить информацию о пользователе по ID",
-            description = "Возвращает основную информацию о пользователе с его статистикой"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Информация о пользователе",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
-            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
-    })
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<UserResponse> getUserInfo(@PathVariable UUID userId) {
-        try {
-            return userService.findById(userId)
-                    .map(user -> {
-                        UserResponse response = new UserResponse();
-                        response.setId(user.getId());
-                        response.setUsername(user.getUsername());
-
-                        // Получаем статистику пользователя из StatisticsService
-                        PlayerStatsResponse stats = statisticsService.getPlayerStats(userId);
-                        response.setGamesPlayed(stats.getTotalGames());
-                        response.setWins(stats.getWins());
-                        response.setWinRate(stats.getWinRate());
-
-                        return ResponseEntity.ok(response);
-                    })
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @GetMapping("/me")
-    @Operation(
-            summary = "Получение информации о текущем пользователе",
-            description = "Возвращает информацию о текущем пользователе с его статистикой"
-    )
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<UserResponse> getCurrentUser() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof JwtAuthentication jwtAuth) {
-            UUID userId = jwtAuth.getUserId();
-            return userService.findById(userId)
-                    .map(user -> {
-                        UserResponse response = new UserResponse();
-                        response.setId(user.getId());
-                        response.setUsername(user.getUsername());
-
-                        // Получаем статистику пользователя из StatisticsService
-                        PlayerStatsResponse stats = statisticsService.getPlayerStats(userId);
-                        response.setGamesPlayed(stats.getTotalGames());
-                        response.setWins(stats.getWins());
-                        response.setWinRate(stats.getWinRate());
-
-                        return ResponseEntity.ok(response);
-                    })
-                    .orElse(ResponseEntity.notFound().build());
-        }
-        return ResponseEntity.status(401).build();
     }
 
     // endpoint для получения всех завершенных игр по accessToken, доступ к которому есть только у авторизованных пользователей.
@@ -174,5 +106,74 @@ public class UserController {
             return jwtAuth.getUserId();
         }
         throw new RuntimeException("User not authenticated");
+    }
+
+    @GetMapping("/{userId}/stats")
+    @Operation(
+            summary = "Получить статистику любого пользователя",
+            description = """
+            Возвращает полную статистику игр указанного пользователя.
+            Доступно всем аутентифицированным пользователям.
+            
+            **Пример ответа:**
+            ```json
+            {
+              "userId": "123e4567-e89b-12d3-a456-426614174000",
+              "username": "player1",
+              "totalGames": 15,
+              "wins": 9,
+              "losses": 4,
+              "draws": 2,
+              "winRate": 60.0
+            }
+            ```
+            """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Статистика получена",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PlayerStatsResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Статистика пользователя",
+                                    value = """
+                        {
+                          "userId": "123e4567-e89b-12d3-a456-426614174000",
+                          "username": "player1",
+                          "totalGames": 15,
+                          "wins": 9,
+                          "losses": 4,
+                          "draws": 2,
+                          "winRate": 60.0
+                        }
+                        """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PlayerStatsResponse> getUserStats(
+            @Parameter(
+                    description = "UUID пользователя",
+                    example = "123e4567-e89b-12d3-a456-426614174000"
+            )
+            @PathVariable UUID userId) {
+
+        try {
+            // Проверяем, существует ли пользователь
+            if (!userService.findById(userId).isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            PlayerStatsResponse stats = statisticsService.getPlayerStats(userId);
+            return ResponseEntity.ok(stats);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

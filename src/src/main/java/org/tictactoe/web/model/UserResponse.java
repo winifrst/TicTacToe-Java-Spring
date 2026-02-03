@@ -29,7 +29,6 @@ public class UserResponse {
     @Schema(description = "Позиция в таблице лидеров", example = "5", nullable = true)
     private Integer leaderboardPosition;
 
-    // Геттеры и сеттеры
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
