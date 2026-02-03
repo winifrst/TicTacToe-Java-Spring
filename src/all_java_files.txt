@@ -1,0 +1,3173 @@
+package org.tictactoe.domain.service;
+
+import org.springframework.stereotype.Service;
+import org.tictactoe.domain.model.Game;
+import org.tictactoe.domain.model.GameStatus;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.tictactoe.domain.service.Constants.*;
+
+@Service
+public class GameServiceImpl implements GameService {
+
+    @Override
+    public boolean validateBoard(Game game, int[][] newBoard, UUID playerId) {
+        int[][] oldBoard = game.getBoard();
+        int changes = 0;
+        int row = -1, col = -1;
+        int newValue = EMPTY;
+        printBoard(oldBoard);
+
+        printBoard(newBoard);
+
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (oldBoard[i][j] != newBoard[i][j]) {
+                    changes++;
+                    row = i;
+                    col = j;
+                    newValue = newBoard[i][j];
+                    if (oldBoard[i][j] != EMPTY) {
+                        return false;
+                    }
+                }
+            }
+        }
+        if (changes != 1) {
+            return false;
+        }
+
+        int expectedSymbol = game.getPlayerSymbolCode(playerId);
+        if (newValue != expectedSymbol) {
+            return false;
+        }
+
+        boolean isTurn = isPlayerTurn(game, playerId);
+        return isTurn;
+    }
+
+    @Override
+    public boolean isPlayerTurn(Game game, UUID playerId) {
+        if (game.getCurrentPlayerId() == null) {
+            return false;
+        }
+
+        boolean result = false;
+
+        if (game.getStatus() == GameStatus.PLAYER_X_TURN) {
+            boolean isPlayerX = game.isPlayerX(playerId);
+            boolean isCurrentPlayer = game.getCurrentPlayerId().equals(playerId);
+            result = isPlayerX && isCurrentPlayer;
+        } else if (game.getStatus() == GameStatus.PLAYER_O_TURN) {
+            boolean isPlayerO = game.isPlayerO(playerId);
+            boolean isCurrentPlayer = game.getCurrentPlayerId().equals(playerId);
+            result = isPlayerO && isCurrentPlayer;
+        } else if (game.getStatus() == GameStatus.COMPUTER_TURN) {
+
+            result = false;
+        } else {
+
+        }
+        return result;
+    }
+
+    @Override
+    public Game makeMove(Game game, int row, int col, UUID playerId) {
+        int playerSymbol = game.getPlayerSymbolCode(playerId);
+        int[][] newBoard = copyBoard(game.getBoard());
+        newBoard[row][col] = playerSymbol;
+        game.setBoard(newBoard);
+        printBoard(game.getBoard());
+
+        if (game.isAgainstComputer()) {
+            if (playerSymbol == FIRST_PLAYER) {
+                game.setStatus(GameStatus.COMPUTER_TURN);
+                game.setCurrentPlayerId(null);
+
+            } else {
+                game.setStatus(GameStatus.PLAYER_X_TURN);
+                game.setCurrentPlayerId(game.getPlayerXId());
+
+            }
+        } else {
+            if (playerSymbol == FIRST_PLAYER) {
+                game.setStatus(GameStatus.PLAYER_O_TURN);
+                game.setCurrentPlayerId(game.getPlayerOId());
+            } else {
+                game.setStatus(GameStatus.PLAYER_X_TURN);
+                game.setCurrentPlayerId(game.getPlayerXId());
+            }
+        }
+
+        return game;
+    }
+
+    @Override
+    public Game checkGameStatus(Game game) {
+        int[][] board = game.getBoard();
+        int winner = checkWinner(board);
+
+        if (winner == FIRST_PLAYER) {
+            game.setStatus(GameStatus.PLAYER_X_WON);
+
+        } else if (winner == SECOND_PLAYER) {
+            game.setStatus(GameStatus.PLAYER_O_WON);
+
+        } else if (isBoardFull(board)) {
+            game.setStatus(GameStatus.DRAW);
+
+        }
+
+        return game;
+    }
+
+    @Override
+    public boolean validateMove(Game game, int row, int col, UUID playerId) {
+        if (game.getStatus() != GameStatus.PLAYER_X_TURN &&
+                game.getStatus() != GameStatus.PLAYER_O_TURN &&
+                game.getStatus() != GameStatus.COMPUTER_TURN) {
+            return false;
+        }
+
+        if (!isPlayerTurn(game, playerId)) {
+            return false;
+        }
+
+        if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) {
+            return false;
+        }
+
+        if (game.getBoard()[row][col] != EMPTY) {
+            return false;
+        }
+        return isPlayerInGame(game, playerId);
+    }
+
+    @Override
+    public Game makeComputerMove(Game game) {
+
+        int[] move = getNextMove(game);
+
+        if (move[0] != -1) {
+            int[][] newBoard = copyBoard(game.getBoard());
+            newBoard[move[0]][move[1]] = SECOND_PLAYER;
+            game.setBoard(newBoard);
+
+            game.setStatus(GameStatus.PLAYER_X_TURN);
+            game.setCurrentPlayerId(game.getPlayerXId());
+        }
+
+        return game;
+    }
+
+    @Override
+    public int[] getNextMove(Game game) {
+        int[][] board = copyBoard(game.getBoard());
+        int bestScore = Integer.MIN_VALUE;
+        int[] bestMove = new int[]{-1, -1};
+
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (board[i][j] == EMPTY) {
+                    board[i][j] = SECOND_PLAYER;
+                    int score = minimax(board, 0, false);
+                    board[i][j] = EMPTY;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove[0] = i;
+                        bestMove[1] = j;
+                    }
+                }
+            }
+        }
+
+        return bestMove;
+    }
+
+    @Override
+    public boolean isPlayerInGame(Game game, UUID playerId) {
+        return game.isPlayerX(playerId) || game.isPlayerO(playerId);
+    }
+
+    @Override
+    public int getPlayerSymbol(Game game, UUID playerId) {
+        return game.getPlayerSymbolCode(playerId);
+    }
+
+    private int minimax(int[][] board, int depth, boolean isMaximizing) {
+        int winner = checkWinner(board);
+
+        if (winner == SECOND_PLAYER) return 10 - depth;
+        if (winner == FIRST_PLAYER) return depth - 10;
+        if (isBoardFull(board)) return 0;
+
+        if (isMaximizing) {
+            int bestScore = Integer.MIN_VALUE;
+            for (int i = 0; i < BOARD_SIZE; i++) {
+                for (int j = 0; j < BOARD_SIZE; j++) {
+                    if (board[i][j] == EMPTY) {
+                        board[i][j] = SECOND_PLAYER;
+                        int score = minimax(board, depth + 1, false);
+                        board[i][j] = EMPTY;
+                        bestScore = Math.max(score, bestScore);
+                    }
+                }
+            }
+            return bestScore;
+        } else {
+            int bestScore = Integer.MAX_VALUE;
+            for (int i = 0; i < BOARD_SIZE; i++) {
+                for (int j = 0; j < BOARD_SIZE; j++) {
+                    if (board[i][j] == EMPTY) {
+                        board[i][j] = FIRST_PLAYER;
+                        int score = minimax(board, depth + 1, true);
+                        board[i][j] = EMPTY;
+                        bestScore = Math.min(score, bestScore);
+                    }
+                }
+            }
+            return bestScore;
+        }
+    }
+
+    private int checkWinner(int[][] board) {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            if (board[i][0] != EMPTY &&
+                    board[i][0] == board[i][1] &&
+                    board[i][1] == board[i][2]) {
+                return board[i][0];
+            }
+        }
+
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            if (board[0][j] != EMPTY &&
+                    board[0][j] == board[1][j] &&
+                    board[1][j] == board[2][j]) {
+                return board[0][j];
+            }
+        }
+
+        if (board[0][0] != EMPTY &&
+                board[0][0] == board[1][1] &&
+                board[1][1] == board[2][2]) {
+            return board[0][0];
+        }
+        if (board[0][2] != EMPTY &&
+                board[0][2] == board[1][1] &&
+                board[1][1] == board[2][0]) {
+            return board[0][2];
+        }
+
+        return EMPTY;
+    }
+
+    private boolean isBoardFull(int[][] board) {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (board[i][j] == EMPTY) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private int[][] copyBoard(int[][] board) {
+        int[][] newBoard = new int[BOARD_SIZE][BOARD_SIZE];
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            System.arraycopy(board[i], 0, newBoard[i], 0, BOARD_SIZE);
+        }
+        return newBoard;
+    }
+
+    private void printBoard(int[][] board) {
+        for (int i = 0; i < board.length; i++) {
+            System.out.print("[");
+            for (int j = 0; j < board[i].length; j++) {
+                System.out.print(board[i][j]);
+                if (j < board[i].length - 1) System.out.print(", ");
+            }
+
+        }
+    }
+}package org.tictactoe.domain.service;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.tictactoe.datasource.repository.UserRepository;
+import org.tictactoe.domain.model.JwtAuthentication;
+import org.tictactoe.domain.model.User;
+import org.tictactoe.web.model.JwtRequest;
+import org.tictactoe.web.model.JwtResponse;
+import org.tictactoe.web.model.RefreshJwtRequest;
+import org.tictactoe.web.model.SignUpRequest;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Service
+public class AuthServiceImpl implements AuthService {
+
+    private final UserService userService;
+    private final JwtProvider jwtProvider;
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+
+    // Хранилище для отозванных токенов
+    private final Map<String, LocalDateTime> revokedTokens = new ConcurrentHashMap<>();
+
+    public AuthServiceImpl(UserService userService,
+                           JwtProvider jwtProvider,
+                           JwtUtil jwtUtil,
+                           UserRepository userRepository) {
+        this.userService = userService;
+        this.jwtProvider = jwtProvider;
+        this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public boolean register(SignUpRequest request) {
+        if (userService.existsByUsername(request.getUsername())) {
+            return false;
+        }
+        userService.createUser(request.getUsername(), request.getPassword());
+        return true;
+    }
+
+    @Override
+    public JwtResponse login(JwtRequest request) {
+        if (!userService.validateUser(request.getUsername(), request.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        Optional<User> userOpt = userService.findByUsername(request.getUsername());
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+
+        User user = userOpt.get();
+        String accessToken = jwtProvider.generateAccessToken(user);
+        String refreshToken = jwtProvider.generateRefreshToken(user);
+
+        return new JwtResponse(accessToken, refreshToken);
+    }
+
+    @Override
+    public JwtResponse getNewAccessToken(String refreshToken) {
+        // Проверяем, не отозван ли токен
+        if (isTokenRevoked(refreshToken)) {
+            throw new RuntimeException("Refresh token has been revoked");
+        }
+
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        var claims = jwtProvider.getRefreshClaims(refreshToken);
+        String userIdStr = claims.get("userId", String.class);
+        UUID userId = UUID.fromString(userIdStr);
+
+        // Проверяем, существует ли пользователь
+        Optional<User> userOpt = userService.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+
+        User user = userOpt.get();
+        String newAccessToken = jwtProvider.generateAccessToken(user);
+
+        return new JwtResponse(newAccessToken, refreshToken);
+    }
+
+    @Override
+    public JwtResponse getNewRefreshToken(String refreshToken) {
+        // Проверяем, не отозван ли токен
+        if (isTokenRevoked(refreshToken)) {
+            throw new RuntimeException("Refresh token has been revoked");
+        }
+
+        // Отзываем старый токен
+        revokeToken(refreshToken);
+
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        var claims = jwtProvider.getRefreshClaims(refreshToken);
+        String userIdStr = claims.get("userId", String.class);
+        UUID userId = UUID.fromString(userIdStr);
+
+        Optional<User> userOpt = userService.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+
+        User user = userOpt.get();
+        String newAccessToken = jwtProvider.generateAccessToken(user);
+        String newRefreshToken = jwtProvider.generateRefreshToken(user);
+
+        return new JwtResponse(newAccessToken, newRefreshToken);
+    }
+
+    @Override
+    public JwtAuthentication getAuthentication(String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        // Проверяем, не отозван ли токен (для access токенов)
+        if (isTokenRevoked(token)) {
+            return null;
+        }
+
+        if (!jwtProvider.validateAccessToken(token)) {
+            return null;
+        }
+
+        try {
+            var claims = jwtProvider.getAccessClaims(token);
+            return jwtUtil.generateAuthentication(claims);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Optional<UUID> getCurrentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UUID) {
+            return Optional.of((UUID) authentication.getPrincipal());
+        }
+        return Optional.empty();
+    }
+
+    // Метод для отзыва токена
+    public void revokeToken(String token) {
+        revokedTokens.put(token, LocalDateTime.now());
+    }
+
+    // Метод для проверки отозван ли токен
+    private boolean isTokenRevoked(String token) {
+        return revokedTokens.containsKey(token);
+    }
+
+    // Метод для очистки старых отозванных токенов (можно вызывать по расписанию)
+    public void cleanupRevokedTokens() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(7);
+        revokedTokens.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoff));
+    }
+}package org.tictactoe.domain.service;
+
+import org.tictactoe.domain.model.JwtAuthentication;
+import org.tictactoe.web.model.JwtRequest;
+import org.tictactoe.web.model.JwtResponse;
+import org.tictactoe.web.model.RefreshJwtRequest;
+import org.tictactoe.web.model.SignUpRequest;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface AuthService {
+    // Регистрация
+    boolean register(SignUpRequest request);
+
+    // Аутентификация с JWT
+    JwtResponse login(JwtRequest request);
+
+    // Обновление Access Token
+    JwtResponse getNewAccessToken(String refreshToken);
+
+    // Обновление Refresh Token
+    JwtResponse getNewRefreshToken(String refreshToken);
+
+    // Получение аутентификации (для фильтра)
+    JwtAuthentication getAuthentication(String token);
+
+//    public Optional<UUID> getCurrentUserId();
+}// org.tictactoe.domain.service.StatisticsService.java
+package org.tictactoe.domain.service;
+
+import org.springframework.stereotype.Service;
+import org.tictactoe.datasource.mapper.GameMapper;
+import org.tictactoe.datasource.mapper.UserMapper;
+import org.tictactoe.datasource.repository.GameRepository;
+import org.tictactoe.datasource.repository.UserRepository;
+import org.tictactoe.domain.model.Game;
+import org.tictactoe.domain.model.User;
+import org.tictactoe.web.model.GameHistoryResponse;
+import org.tictactoe.web.model.PlayerStatsResponse;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class StatisticsService {
+    private final GameRepository gameRepository;
+    private final UserRepository userRepository;
+
+    public StatisticsService(GameRepository gameRepository, UserRepository userRepository) {
+        this.gameRepository = gameRepository;
+        this.userRepository = userRepository;
+    }
+
+    // Добавь в сервис для работы с играми метод для получения всех завершенных игр по UUID пользователя
+    public List<GameHistoryResponse> getFinishedGamesByUserId(UUID userId) {
+        var gameEntities = gameRepository.findFinishedGamesByUserId(userId);
+
+        return gameEntities.stream()
+                .map(GameMapper::toDomain)
+                .map(game -> toGameHistoryResponse(game, userId))
+                .sorted(Comparator.comparing(GameHistoryResponse::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+    }
+
+    public PlayerStatsResponse getPlayerStats(UUID userId) {
+        int totalGames = gameRepository.countFinishedGamesByUserId(userId);
+        int wins = gameRepository.countWinsByUserId(userId);
+        int losses = gameRepository.countLossesByUserId(userId);
+        int draws = gameRepository.countDrawsByUserId(userId);
+
+        Optional<User> userOpt = userRepository.findById(userId)
+                .map(UserMapper::toDomain);
+
+        PlayerStatsResponse stats = new PlayerStatsResponse();
+        stats.setUserId(userId);
+        userOpt.ifPresent(user -> stats.setUsername(user.getUsername()));
+        stats.setTotalGames(totalGames);
+        stats.setWins(wins);
+        stats.setLosses(losses);
+        stats.setDraws(draws);
+        stats.setWinRate(totalGames > 0 ? (double) wins / totalGames * 100 : 0);
+
+        return stats;
+    }
+
+    public List<PlayerStatsResponse> getTopPlayers(int limit) {
+        List<Object[]> results = gameRepository.findTopPlayers(limit);
+        List<PlayerStatsResponse> topPlayers = new ArrayList<>();
+
+        for (Object[] row : results) {
+            UUID userId = (UUID) row[0];
+            String username = (String) row[1];
+            Long wins = ((Number) row[2]).longValue();
+            Long losses = ((Number) row[3]).longValue();
+            Long draws = ((Number) row[4]).longValue();
+            long totalGames = wins + losses + draws;
+
+            PlayerStatsResponse stats = new PlayerStatsResponse();
+            stats.setUserId(userId);
+            stats.setUsername(username);
+            stats.setWins(wins.intValue());
+            stats.setLosses(losses.intValue());
+            stats.setDraws(draws.intValue());
+            stats.setTotalGames((int) totalGames);
+            stats.setWinRate(totalGames > 0 ? (double) wins / totalGames * 100 : 0);
+
+            topPlayers.add(stats);
+        }
+
+        return topPlayers;
+    }
+
+    private GameHistoryResponse toGameHistoryResponse(Game game, UUID currentUserId) {
+        GameHistoryResponse response = new GameHistoryResponse();
+        response.setGameId(game.getId());
+        response.setStatus(game.getStatus().toString());
+        response.setCreatedAt(game.getCreatedAt());
+        response.setAgainstComputer(game.isAgainstComputer());
+
+        // Определяем символ текущего пользователя
+        if (game.isPlayerX(currentUserId)) {
+            response.setPlayerSymbol(game.getPlayerXSymbol());
+            response.setOpponentSymbol(game.getPlayerOSymbol());
+            response.setOpponentId(game.getPlayerOId());
+        } else {
+            response.setPlayerSymbol(game.getPlayerOSymbol());
+            response.setOpponentSymbol(game.getPlayerXSymbol());
+            response.setOpponentId(game.getPlayerXId());
+        }
+
+        // Определяем результат для текущего пользователя
+        if (game.getStatus() == org.tictactoe.domain.model.GameStatus.PLAYER_X_WON) {
+            if (game.isPlayerX(currentUserId)) {
+                response.setResult("WIN");
+            } else {
+                response.setResult("LOSS");
+            }
+        } else if (game.getStatus() == org.tictactoe.domain.model.GameStatus.PLAYER_O_WON) {
+            if (game.isPlayerO(currentUserId)) {
+                response.setResult("WIN");
+            } else {
+                response.setResult("LOSS");
+            }
+        } else {
+            response.setResult("DRAW");
+        }
+
+        // Получаем имя противника
+        if (response.getOpponentId() != null && !game.isAgainstComputer()) {
+            userRepository.findById(response.getOpponentId())
+                    .map(UserMapper::toDomain)
+                    .ifPresent(user -> response.setOpponentUsername(user.getUsername()));
+        } else if (game.isAgainstComputer()) {
+            response.setOpponentUsername("Computer");
+        }
+
+        return response;
+    }
+}package org.tictactoe.domain.service;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Component;
+import org.tictactoe.domain.model.Role;
+import org.tictactoe.domain.model.User;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Component
+public class JwtProvider {
+
+    @Value("${jwt.secret.access}")
+    private String jwtAccessSecret;
+
+    @Value("${jwt.secret.refresh}")
+    private String jwtRefreshSecret;
+
+    @Value("${jwt.access.expiration}")
+    private Long accessTokenExpiration;
+
+    @Value("${jwt.refresh.expiration}")
+    private Long refreshTokenExpiration;
+
+    // Метод генерации accessToken по User
+    public String generateAccessToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId().toString());
+        claims.put("username", user.getUsername());
+
+        List<String> roles = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+        claims.put("roles", roles);
+
+        Date issuedDate = new Date();
+        Date expiredDate = new Date(issuedDate.getTime() + accessTokenExpiration);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getId().toString())
+                .setIssuedAt(issuedDate)
+                .setExpiration(expiredDate)
+                .signWith(getSignInKey(jwtAccessSecret), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // Метод генерации refreshToken по User
+    public String generateRefreshToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId().toString());
+        claims.put("tokenType", "refresh");
+
+        Date issuedDate = new Date();
+        Date expiredDate = new Date(issuedDate.getTime() + refreshTokenExpiration);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getId().toString())
+                .setIssuedAt(issuedDate)
+                .setExpiration(expiredDate)
+                .signWith(getSignInKey(jwtRefreshSecret), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // Метод валидации accessToken
+    public boolean validateAccessToken(String token) {
+        return validateToken(token, jwtAccessSecret);
+    }
+
+    // Метод валидации refreshToken
+    public boolean validateRefreshToken(String token) {
+        return validateToken(token, jwtRefreshSecret);
+    }
+
+    // Метод получения claims
+    public Claims getClaimsFromToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey(jwtAccessSecret))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            try {
+                return Jwts.parserBuilder()
+                        .setSigningKey(getSignInKey(jwtRefreshSecret))
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody();
+            } catch (Exception ex) {
+                throw new RuntimeException("Invalid JWT token", ex);
+            }
+        }
+    }
+
+    // Дополнительные методы для получения claims по типу токена
+    public Claims getAccessClaims(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey(jwtAccessSecret))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid access token", e);
+        }
+    }
+
+    public Claims getRefreshClaims(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey(jwtRefreshSecret))
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid refresh token", e);
+        }
+    }
+
+    private boolean validateToken(String token, String secret) {
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey(secret))
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Invalid JWT token: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private SecretKey getSignInKey(String secret) {
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String getUserIdFromToken(String token) {
+        Claims claims = getAccessClaims(token);
+        return claims.get("userId", String.class);
+    }
+}package org.tictactoe.domain.service;
+
+import org.tictactoe.domain.model.User;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface UserService {
+    Optional<User> findById(UUID id);  // Явное указание на возможное отсутствие значения
+
+    Optional<User> findByUsername(String username);
+
+    User createUser(String username, String password);
+
+    boolean validateUser(String username, String password);
+
+    boolean existsByUsername(String username);
+}
+package org.tictactoe.domain.service;
+
+import org.springframework.stereotype.Service;
+import org.tictactoe.datasource.mapper.GameMapper;
+import org.tictactoe.datasource.model.GameEntity;
+import org.tictactoe.datasource.repository.GameRepository;
+import org.tictactoe.domain.model.Game;
+import org.tictactoe.domain.model.GameStatus;
+import org.tictactoe.web.model.GameResponse;
+import org.tictactoe.web.webmapper.WebGameMapper;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+@Service
+public class GameManagementService {
+
+    private final GameRepository gameRepository;
+    private final GameService gameService;
+
+    public GameManagementService(GameRepository gameRepository,
+                                 GameService gameService) {
+        this.gameRepository = gameRepository;
+        this.gameService = gameService;
+    }
+
+    public Optional<Game> findGameById(UUID gameId) {
+        return gameRepository.findById(gameId)
+                .map(GameMapper::toDomain);
+    }
+
+    public Game saveGame(Game game) {
+        GameEntity entity = GameMapper.toEntity(game);
+        GameEntity savedEntity = gameRepository.save(entity);
+        return GameMapper.toDomain(savedEntity);
+    }
+
+    public List<Game> getAvailableGames(UUID currentUserId) {
+        return StreamSupport.stream(gameRepository.findAll().spliterator(), false)
+                .map(GameMapper::toDomain)
+                .filter(game -> game.getStatus() == GameStatus.WAITING_FOR_PLAYERS)
+                .filter(game -> !gameService.isPlayerInGame(game, currentUserId))
+                .collect(Collectors.toList());
+    }
+
+    public boolean isPlayerInGame(Game game, UUID playerId) {
+        return gameService.isPlayerInGame(game, playerId);
+    }
+
+    public boolean isPlayerInGameById(UUID gameId, UUID playerId) {
+        Optional<Game> gameOpt = findGameById(gameId);
+        return gameOpt.map(game -> gameService.isPlayerInGame(game, playerId))
+                .orElse(false);
+    }
+
+    public GameResponse convertToResponse(Game game, UUID currentUserId) {
+        return WebGameMapper.toResponseFromDomain(game, currentUserId);
+    }
+}package org.tictactoe.domain.service;
+
+import io.jsonwebtoken.Claims;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
+import org.tictactoe.domain.model.JwtAuthentication;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Component
+public class JwtUtil {
+
+    public JwtAuthentication generateAuthentication(Claims claims) {
+        String userIdStr = claims.get("userId", String.class);
+        String username = claims.get("username", String.class);
+
+        // Важно: извлекаем роли из claims
+
+
+        List<String> roles = claims.get("roles", List.class);
+        if (roles == null) {
+            roles = Collections.singletonList("ROLE_USER");
+        }
+
+        List<GrantedAuthority> authorities = roles.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+
+        UUID userId = UUID.fromString(userIdStr);
+        JwtAuthentication authentication = new JwtAuthentication();
+        authentication.setUserId(userId);
+        authentication.setUsername(username);
+        authentication.setAuthorities(authorities);
+        authentication.setAuthenticated(true);
+
+        return authentication;
+    }
+}package org.tictactoe.domain.service;
+
+import org.springframework.stereotype.Service;
+import org.tictactoe.datasource.mapper.UserMapper;
+import org.tictactoe.datasource.model.UserEntity;
+import org.tictactoe.datasource.repository.UserRepository;
+import org.tictactoe.domain.model.User;
+import org.tictactoe.domain.model.Role;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public User createUser(String username, String password) {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setUsername(username);
+        user.setPassword(password);
+
+        user.addRole(Role.ROLE_USER);
+
+        userRepository.save(UserMapper.toEntity(user));
+        return user;
+    }
+
+    @Override
+    public Optional<User> findById(UUID id) {
+        return userRepository.findById(id)
+                .map(UserMapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(UserMapper::toDomain);
+    }
+
+    @Override
+    public boolean validateUser(String username, String password) {
+
+        try {
+            // Получаем пользователя из БД
+            Optional<UserEntity> entityOpt = userRepository.findByUsername(username);
+            if (entityOpt.isEmpty()) {
+                return false;
+            }
+            UserEntity entity = entityOpt.get();
+            // Конвертируем в domain
+            User user = UserMapper.toDomain(entity);
+            // Сравниваем пароли
+            boolean passwordMatches = password.equals(user.getPassword());
+            return passwordMatches;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+}package org.tictactoe.domain.service;
+
+import org.tictactoe.domain.model.Game;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface GameService {
+    int[] getNextMove(Game game);
+
+    boolean validateBoard(Game game, int[][] newBoard, UUID playerId);
+
+    Game checkGameStatus(Game game);
+
+    boolean validateMove(Game game, int row, int col, UUID playerId);
+
+    Game makeMove(Game game, int row, int col, UUID playerId);
+
+    Game makeComputerMove(Game game);
+
+    boolean isPlayerInGame(Game game, UUID playerId);
+
+    int getPlayerSymbol(Game game, UUID playerId);
+
+    boolean isPlayerTurn(Game game, UUID playerId);
+
+}package org.tictactoe.domain.service;
+
+public class Constants {
+    public static final int EMPTY = 0;
+    public static final int FIRST_PLAYER = 1;
+    public static final int SECOND_PLAYER = 2;
+    public static final int BOARD_SIZE = 3;
+}package org.tictactoe.domain.model;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
+import java.util.UUID;
+
+public class JwtAuthentication implements Authentication {
+
+    private boolean authenticated;
+    private UUID userId;
+    private String username;
+    private Collection<? extends GrantedAuthority> authorities;
+
+    // Конструкторы
+    public JwtAuthentication() {
+        this.authenticated = false;
+    }
+
+    public JwtAuthentication(UUID userId, String username,
+                             Collection<? extends GrantedAuthority> authorities) {
+        this.userId = userId;
+        this.username = username;
+        this.authorities = authorities;
+        this.authenticated = true;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
+    public Object getCredentials() {
+        return null; // В JWT нет credentials
+    }
+
+    @Override
+    public Object getDetails() {
+        return null; // Можно вернуть дополнительную информацию
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return userId; // Возвращаем UUID пользователя
+    }
+
+    @Override
+    public boolean isAuthenticated() {
+        return authenticated;
+    }
+
+    @Override
+    public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+        this.authenticated = isAuthenticated;
+    }
+
+    @Override
+    public String getName() {
+        return userId != null ? userId.toString() : null;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
+}package org.tictactoe.domain.model;
+
+import org.springframework.security.core.GrantedAuthority;
+
+public enum Role implements GrantedAuthority {
+    ROLE_USER;
+
+    @Override
+    public String getAuthority() {
+        return name();
+    }
+}package org.tictactoe.domain.model;
+
+import org.tictactoe.domain.service.Constants;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import static org.tictactoe.domain.service.Constants.BOARD_SIZE;
+
+public class Game {
+    private UUID id;
+    private int[][] board;
+    private GameStatus status;
+    private UUID playerXId;
+    private UUID playerOId;
+    private UUID currentPlayerId;
+    private boolean isAgainstComputer;
+    private LocalDateTime createdAt;
+    private String playerXSymbol;
+    private String playerOSymbol;
+
+    public Game() {
+        this.id = UUID.randomUUID();
+        this.board = new int[BOARD_SIZE][BOARD_SIZE];
+        this.status = GameStatus.WAITING_FOR_PLAYERS;
+        this.isAgainstComputer = false;
+        this.createdAt = LocalDateTime.now();
+        this.playerXSymbol = "X";
+        this.playerOSymbol = "O";
+    }
+
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public int[][] getBoard() { return board; }
+    public void setBoard(int[][] board) { this.board = board; }
+
+    public GameStatus getStatus() { return status; }
+    public void setStatus(GameStatus status) { this.status = status; }
+
+    public UUID getPlayerXId() { return playerXId; }
+    public void setPlayerXId(UUID playerXId) { this.playerXId = playerXId; }
+
+    public UUID getPlayerOId() { return playerOId; }
+    public void setPlayerOId(UUID playerOId) { this.playerOId = playerOId; }
+
+    public UUID getCurrentPlayerId() { return currentPlayerId; }
+    public void setCurrentPlayerId(UUID currentPlayerId) { this.currentPlayerId = currentPlayerId; }
+
+    public boolean isAgainstComputer() { return isAgainstComputer; }
+    public void setAgainstComputer(boolean againstComputer) { isAgainstComputer = againstComputer; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getPlayerXSymbol() { return playerXSymbol; }
+    public void setPlayerXSymbol(String playerXSymbol) { this.playerXSymbol = playerXSymbol; }
+
+    public String getPlayerOSymbol() { return playerOSymbol; }
+    public void setPlayerOSymbol(String playerOSymbol) { this.playerOSymbol = playerOSymbol; }
+
+    public boolean isPlayerX(UUID playerId) {
+        return playerId != null && playerId.equals(playerXId);
+    }
+
+    public boolean isPlayerO(UUID playerId) {
+        return playerId != null && playerId.equals(playerOId);
+    }
+
+    public int getPlayerSymbolCode(UUID playerId) {
+        if (isPlayerX(playerId)) return Constants.FIRST_PLAYER;
+        if (isPlayerO(playerId)) return Constants.SECOND_PLAYER;
+        return Constants.EMPTY;  // если не участвует в игре
+    }
+
+    public String getPlayerSymbolString(UUID playerId) {
+        if (isPlayerX(playerId)) return playerXSymbol;
+        if (isPlayerO(playerId)) return playerOSymbol;
+        return null;
+    }
+
+    public boolean isFinished() {
+        return status == GameStatus.PLAYER_X_WON ||
+                status == GameStatus.PLAYER_O_WON ||
+                status == GameStatus.DRAW;
+    }
+}package org.tictactoe.domain.model;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class User {
+    private UUID id;
+    private String username;
+    private String password;
+    private Set<Role> roles = new HashSet<>(Set.of(Role.ROLE_USER));
+
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getAuthority()))
+                .collect(Collectors.toList());
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+}package org.tictactoe.domain.model;
+
+public class UserStats {
+}
+package org.tictactoe.domain.model;
+
+public enum GameStatus {
+    WAITING_FOR_PLAYERS,
+    PLAYER_X_TURN,
+    PLAYER_O_TURN,
+    COMPUTER_TURN,
+    PLAYER_X_WON,
+    PLAYER_O_WON,
+    DRAW
+}package org.tictactoe.web.filter;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.tictactoe.domain.model.JwtAuthentication;
+import org.tictactoe.domain.service.AuthService;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@Component
+public class AuthFilter extends OncePerRequestFilter {
+
+    private final AuthService authService;
+
+    public AuthFilter(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/auth/") ||
+                path.equals("/refresh") ||
+                path.contains("webjars") ||
+                path.contains("swagger-resources") ||
+                path.contains("configuration/") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/swagger-ui/") ||
+                path.startsWith("/api-docs") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/webjars/") ||
+                path.startsWith("/swagger-resources") ||
+                path.equals("/favicon.ico") ||
+                path.equals("/swagger-ui.html");
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String token = getTokenFromRequest(request);
+        String path = request.getRequestURI();
+
+        System.out.println("Processing request to: " + path);
+        System.out.println("Token present: " + (token != null));
+
+        if (token != null) {
+            try {
+                JwtAuthentication authentication = authService.getAuthentication(token);
+                System.out.println("Authentication result: " + (authentication != null));
+
+                if (authentication != null && authentication.isAuthenticated()) {
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (Exception e) {
+                logger.error("Error processing JWT token", e);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+}package org.tictactoe.web.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import org.tictactoe.domain.model.JwtAuthentication;
+import org.tictactoe.domain.service.StatisticsService;
+import org.tictactoe.domain.service.UserService;
+import org.tictactoe.web.model.*;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/user")
+@Tag(
+        name = "Пользователи",
+        description = "Операции с пользователями: получение информации и статистики"
+)
+@SecurityRequirement(name = "bearerAuth")
+public class UserController {
+
+    private final UserService userService;
+    private final StatisticsService statisticsService;
+
+    public UserController(UserService userService, StatisticsService statisticsService) {
+        this.userService = userService;
+        this.statisticsService = statisticsService;
+    }
+
+    // endpoint для получения всех завершенных игр по accessToken, доступ к которому есть только у авторизованных пользователей.
+    @GetMapping("/me/history")
+    @Operation(
+            summary = "Получить историю игр текущего пользователя",
+            description = "Возвращает историю завершенных игр текущего пользователя"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "История игр получена",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = GameHistoryResponse.class))
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<GameHistoryResponse>> getMyGameHistory() {
+        try {
+            UUID userId = getCurrentUserId();
+            List<GameHistoryResponse> history = statisticsService.getFinishedGamesByUserId(userId);
+            return ResponseEntity.ok(history);
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/me/stats")
+    @Operation(
+            summary = "Получить подробную статистику текущего пользователя",
+            description = "Возвращает полную статистику игр текущего пользователя"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Статистика получена",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PlayerStatsResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PlayerStatsResponse> getMyStats() {
+        try {
+            UUID userId = getCurrentUserId();
+            PlayerStatsResponse stats = statisticsService.getPlayerStats(userId);
+            return ResponseEntity.ok(stats);
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    private UUID getCurrentUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth instanceof JwtAuthentication jwtAuth) {
+            return jwtAuth.getUserId();
+        }
+        throw new RuntimeException("User not authenticated");
+    }
+
+    @GetMapping("/{userId}/stats")
+    @Operation(
+            summary = "Получить статистику любого пользователя",
+            description = """
+            Возвращает полную статистику игр указанного пользователя.
+            Доступно всем аутентифицированным пользователям.
+            
+            **Пример ответа:**
+            ```json
+            {
+              "userId": "123e4567-e89b-12d3-a456-426614174000",
+              "username": "player1",
+              "totalGames": 15,
+              "wins": 9,
+              "losses": 4,
+              "draws": 2,
+              "winRate": 60.0
+            }
+            ```
+            """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Статистика получена",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PlayerStatsResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Статистика пользователя",
+                                    value = """
+                        {
+                          "userId": "123e4567-e89b-12d3-a456-426614174000",
+                          "username": "player1",
+                          "totalGames": 15,
+                          "wins": 9,
+                          "losses": 4,
+                          "draws": 2,
+                          "winRate": 60.0
+                        }
+                        """
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PlayerStatsResponse> getUserStats(
+            @Parameter(
+                    description = "UUID пользователя",
+                    example = "123e4567-e89b-12d3-a456-426614174000"
+            )
+            @PathVariable UUID userId) {
+
+        try {
+            // Проверяем, существует ли пользователь
+            if (!userService.findById(userId).isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            PlayerStatsResponse stats = statisticsService.getPlayerStats(userId);
+            return ResponseEntity.ok(stats);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+}package org.tictactoe.web.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.tictactoe.domain.service.AuthService;
+import org.tictactoe.web.model.*;
+
+@RestController
+@RequestMapping("/auth")
+@Tag(name = "Аутентификация", description = "Регистрация и авторизация пользователей")
+public class AuthController {
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/signup")
+    @Operation(summary = "Регистрация нового пользователя")
+    public ResponseEntity<AuthResponse> signUp(@RequestBody SignUpRequest request) {
+        boolean success = authService.register(request);
+
+        AuthResponse response = new AuthResponse();
+        if (success) {
+            response.setMessage("User registered successfully");
+            return ResponseEntity.ok(response);
+        } else {
+            response.setMessage("Username already exists");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/login")
+    @Operation(summary = "Авторизация пользователя (получение токенов)")
+    public ResponseEntity<?> login(@RequestBody JwtRequest request) {
+        try {
+            JwtResponse jwtResponse = authService.login(request);
+            return ResponseEntity.ok(jwtResponse);
+        } catch (Exception e) {
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage("Invalid credentials: " + e.getMessage());
+            return ResponseEntity.status(401).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/refresh/access")
+    @Operation(summary = "Обновление access токена")
+    public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshJwtRequest request) {
+        try {
+            JwtResponse jwtResponse = authService.getNewAccessToken(request.getRefreshToken());
+            return ResponseEntity.ok(jwtResponse);
+        } catch (Exception e) {
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage("Invalid refresh token: " + e.getMessage());
+            return ResponseEntity.status(401).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Обновление refresh токена")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshJwtRequest request) {
+        try {
+            JwtResponse jwtResponse = authService.getNewRefreshToken(request.getRefreshToken());
+            return ResponseEntity.ok(jwtResponse);
+        } catch (Exception e) {
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage("Invalid refresh token: " + e.getMessage());
+            return ResponseEntity.status(401).body(errorResponse);
+        }
+    }
+}package org.tictactoe.web.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import org.tictactoe.domain.model.Game;
+import org.tictactoe.domain.model.GameStatus;
+import org.tictactoe.domain.service.GameService;
+import org.tictactoe.domain.service.GameManagementService;
+import org.tictactoe.web.model.GameRequest;
+import org.tictactoe.web.model.GameResponse;
+import org.tictactoe.web.webmapper.WebGameMapper;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/game")
+@Tag(
+        name = "Игры",
+        description = "Управление игровыми сессиями"
+)
+@SecurityRequirement(name = "bearerAuth")
+public class GameController {
+    private final GameService gameService;
+//    private final GameRepository gameRepository;
+    private final GameManagementService gameManagementService;
+
+
+    public GameController(GameService gameService,
+                          GameManagementService gameManagementService) {
+        this.gameService = gameService;
+        this.gameManagementService = gameManagementService;
+    }
+
+    private UUID getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UUID) {
+            return (UUID) auth.getPrincipal();
+        }
+        throw new RuntimeException("User not authenticated");
+    }
+
+    @PostMapping("/{gameId}")
+    @Operation(
+            summary = "Сделать ход в игре",
+            description = "Выполняет ход в указанной игре. После хода пользователя, " +
+                    "если игра против компьютера, компьютер делает ответный ход автоматически."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Ход успешно выполнен",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Успешный ход",
+                                    value = """
+                    {
+                        "gameId": "123e4567-e89b-12d3-a456-426614174000",
+                        "board": [[0,0,1],[0,2,0],[0,0,0]],
+                        "status": "PLAYER_O_TURN",
+                        "playerXId": "123e4567-e89b-12d3-a456-426614174000",
+                        "playerOId": "223e4567-e89b-12d3-a456-426614174001",
+                        "currentPlayerId": "223e4567-e89b-12d3-a456-426614174001",
+                        "againstComputer": false,
+                        "playerSymbol": "X",
+                        "createdAt": "2024-01-15T10:30:00",
+                        "playerXSymbol": "X",
+                        "playerOSymbol": "O"
+                    }
+                    """
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Некорректный ход или данные",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class),
+                            examples = @ExampleObject(
+                                    name = "Ошибка хода",
+                                    value = "{\"gameId\": \"error\", \"status\": \"ERROR: Invalid move\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "403", description = "Нет доступа к игре"),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена"),
+            @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<GameResponse> updateGame(
+            @PathVariable UUID gameId,
+            @RequestBody GameRequest request) {
+
+        try {
+            UUID userId = getCurrentUserId();
+
+            Optional<Game> gameOpt = gameManagementService.findGameById(gameId);
+            if (gameOpt.isEmpty()) {
+                return ResponseEntity.status(404).build();
+            }
+
+            Game game = gameOpt.get();
+
+            printBoard(game.getBoard());
+            printBoard(request.getBoard());
+
+            if (!gameService.isPlayerInGame(game, userId)) {
+                return ResponseEntity.status(403).build();
+            }
+
+            boolean isValid = gameService.validateBoard(game, request.getBoard(), userId);
+
+            if (!isValid) {
+                GameResponse errorResponse = WebGameMapper.toErrorResponse("Invalid move");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            int[] newMove = findNewMove(game.getBoard(), request.getBoard());
+
+            if (newMove[0] == -1) {
+                GameResponse errorResponse = WebGameMapper.toErrorResponse("No new move detected");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            game = gameService.makeMove(game, newMove[0], newMove[1], userId);
+
+            game = gameService.checkGameStatus(game);
+
+            if (game.isAgainstComputer() &&
+                    game.getStatus() != GameStatus.PLAYER_X_WON &&
+                    game.getStatus() != GameStatus.PLAYER_O_WON &&
+                    game.getStatus() != GameStatus.DRAW) {
+
+                game = gameService.makeComputerMove(game);
+                game = gameService.checkGameStatus(game);
+            }
+
+            Game updatedGame = gameManagementService.saveGame(game);
+            GameResponse response = gameManagementService.convertToResponse(updatedGame, userId);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
+            e.printStackTrace();
+            GameResponse errorResponse = WebGameMapper.toErrorResponse("Internal server error: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    @PostMapping("/new")
+    @Operation(
+            summary = "Создать новую игру",
+            description = "Создает новую игровую сессию. Можно выбрать игру против компьютера или ожидание второго игрока."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Игра успешно создана",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "400", description = "Ошибка при создании игры")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<GameResponse> createGame(
+            @Parameter(
+                    description = """
+            Тип противника:
+            - **computer** - игра против ИИ
+            - **human** - игра против другого игрока (ожидание подключения)
+            """,
+                    required = false,
+                    schema = @Schema(
+                            allowableValues = {"computer", "human"},
+                            defaultValue = "computer",
+                            example = "computer"
+                    ),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Против компьютера",
+                                    value = "computer",
+                                    description = "Игра против искусственного интеллекта"
+                            ),
+                            @ExampleObject(
+                                    name = "Против человека",
+                                    value = "human",
+                                    description = "Игра против другого игрока (мультиплеер)"
+                            )
+                    }
+            )
+            @RequestParam(defaultValue = "computer") String opponent) {
+
+        try {
+            UUID userId = getCurrentUserId();
+
+            Game game = new Game();
+            game.setPlayerXId(userId);
+
+            if ("computer".equalsIgnoreCase(opponent)) {
+                game.setAgainstComputer(true);
+                game.setStatus(GameStatus.PLAYER_X_TURN);
+                game.setCurrentPlayerId(userId);
+            } else {
+                game.setAgainstComputer(false);
+                game.setStatus(GameStatus.WAITING_FOR_PLAYERS);
+            }
+
+            Game savedGame = gameManagementService.saveGame(game);
+            GameResponse response = gameManagementService.convertToResponse(savedGame, userId);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
+            GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to create game: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @GetMapping("/available")
+    @Operation(
+            summary = "Получить список доступных игр",
+            description = "Возвращает список игр, ожидающих второго игрока. " +
+                    "Не включает игры, где текущий пользователь уже является участником."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Список доступных игр",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse[].class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<GameResponse>> getAvailableGames() {
+        try {
+            UUID userId = getCurrentUserId();
+            List<Game> availableGames = gameManagementService.getAvailableGames(userId);
+            List<GameResponse> responses = availableGames.stream()
+                    .map(game -> gameManagementService.convertToResponse(game, userId))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(responses);
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/{gameId}/join")
+    @Operation(
+            summary = "Присоединиться к игре",
+            description = "Текущий пользователь присоединяется к игре в качестве второго игрока (игрок O). " +
+                    "Доступно только для игр со статусом WAITING_FOR_PLAYERS."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешно присоединились к игре",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Невозможно присоединиться к игре"),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<GameResponse> joinGame(@PathVariable UUID gameId) {
+        try {
+            UUID userId = getCurrentUserId();
+            Optional<Game> gameOpt = gameManagementService.findGameById(gameId);
+            if (gameOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Game game = gameOpt.get();
+
+            if (game.getStatus() != GameStatus.WAITING_FOR_PLAYERS) {
+                GameResponse errorResponse = WebGameMapper.toErrorResponse("Game is not waiting for players");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            if (game.isPlayerX(userId)) {
+                GameResponse errorResponse = WebGameMapper.toErrorResponse("You are already in this game");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            game.setPlayerOId(userId);
+            game.setStatus(GameStatus.PLAYER_X_TURN);
+            game.setCurrentPlayerId(game.getPlayerXId());
+
+            Game updatedGame = gameManagementService.saveGame(game);
+            GameResponse response = gameManagementService.convertToResponse(updatedGame, userId);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
+            GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to join game: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @GetMapping("/{gameId}")
+    @Operation(
+            summary = "Получить информацию об игре",
+            description = "Возвращает текущее состояние указанной игры. " +
+                    "Доступно только для участников игры."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Информация об игре",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GameResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация"),
+            @ApiResponse(responseCode = "403", description = "Нет доступа к игре"),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<GameResponse> getGame(@PathVariable UUID gameId) {
+        try {
+            UUID userId = getCurrentUserId();
+
+            Optional<Game> gameOpt = gameManagementService.findGameById(gameId);
+            if (gameOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Game game = gameOpt.get();
+
+            if (!gameService.isPlayerInGame(game, userId)) {
+                return ResponseEntity.status(403).build();
+            }
+
+            GameResponse response = gameManagementService.convertToResponse(game, userId);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not authenticated")) {
+                return ResponseEntity.status(401).build();
+            }
+            GameResponse errorResponse = WebGameMapper.toErrorResponse("Failed to get game: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    private int[] findNewMove(int[][] oldBoard, int[][] newBoard) {
+        for (int i = 0; i < oldBoard.length; i++) {
+            for (int j = 0; j < oldBoard[i].length; j++) {
+                if (oldBoard[i][j] != newBoard[i][j]) {
+                    return new int[]{i, j};
+                }
+            }
+        }
+        return new int[]{-1, -1};
+    }
+
+    private void printBoard(int[][] board) {
+        for (int i = 0; i < board.length; i++) {
+            System.out.print("[");
+            for (int j = 0; j < board[i].length; j++) {
+                System.out.print(board[i][j]);
+                if (j < board[i].length - 1) System.out.print(", ");
+            }
+        }
+    }
+}package org.tictactoe.web.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.tictactoe.domain.service.StatisticsService;
+import org.tictactoe.web.model.PlayerStatsResponse;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/leaderboard")
+@Tag(
+        name = "Таблица лидеров",
+        description = "Операции с таблицей лидеров"
+)
+@SecurityRequirement(name = "bearerAuth")
+public class LeaderboardController {
+
+    private final StatisticsService statisticsService;
+
+    public LeaderboardController(StatisticsService statisticsService) {
+        this.statisticsService = statisticsService;
+    }
+
+    // Добавь endpoint для получения первых N лучших игроков
+    @GetMapping("/top")
+    @Operation(
+            summary = "Получить топ N игроков",
+            description = "Возвращает список лучших игроков, отсортированных по проценту побед"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Список лучших игроков",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = PlayerStatsResponse.class))
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Некорректный параметр limit"),
+            @ApiResponse(responseCode = "401", description = "Требуется авторизация")
+    })
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<PlayerStatsResponse>> getTopPlayers(
+            @Parameter(
+                    description = "Количество игроков в топе (максимум 100, по умолчанию 10)",
+                    example = "10"
+            )
+            @RequestParam(defaultValue = "10") int limit) {
+
+        if (limit <= 0 || limit > 100) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<PlayerStatsResponse> topPlayers = statisticsService.getTopPlayers(limit);
+        return ResponseEntity.ok(topPlayers);
+    }
+}package org.tictactoe.web.webmapper;
+
+import org.tictactoe.domain.model.Game;
+import org.tictactoe.domain.model.GameStatus;
+import org.tictactoe.web.model.GameResponse;
+
+import java.util.UUID;
+
+import static org.tictactoe.domain.service.Constants.BOARD_SIZE;
+
+public class WebGameMapper {
+
+    public static GameResponse toResponseFromDomain(Game game, UUID currentUserId) {
+        GameResponse response = new GameResponse();
+
+        response.setGameId(game.getId().toString());
+        response.setBoard(game.getBoard());
+        response.setStatus(game.getStatus().toString());
+
+        response.setPlayerXId(game.getPlayerXId());
+        response.setPlayerOId(game.getPlayerOId());
+        response.setCurrentPlayerId(game.getCurrentPlayerId());
+        response.setAgainstComputer(game.isAgainstComputer());
+        response.setCreatedAt(game.getCreatedAt());
+
+        response.setPlayerXSymbol(game.getPlayerXSymbol());
+        response.setPlayerOSymbol(game.getPlayerOSymbol());
+
+        // Определяем символ текущего пользователя
+        if (currentUserId != null) {
+            if (game.isPlayerX(currentUserId)) {
+                response.setPlayerSymbol(game.getPlayerXSymbol());  // X
+            } else if (game.isPlayerO(currentUserId)) {
+                response.setPlayerSymbol(game.getPlayerOSymbol());  // O
+            } else {
+                // Пользователь не в игре
+                response.setPlayerSymbol(null);
+            }
+        } else {
+            response.setPlayerSymbol(null);
+        }
+
+        return response;
+    }
+
+    public static GameResponse toErrorResponse(String errorMessage) {
+        GameResponse response = new GameResponse();
+        response.setGameId("error");
+        response.setBoard(new int[BOARD_SIZE][BOARD_SIZE]);
+        response.setStatus("ERROR: " + errorMessage);
+        return response;
+    }
+}package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Запрос на регистрацию нового пользователя")
+public class SignUpRequest {
+
+    @Schema(
+            description = "Логин пользователя (должен быть уникальным)",
+            example = "testuser",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            minLength = 1
+    )
+    private String username;
+
+    @Schema(
+            description = "Пароль пользователя",
+            example = "password123",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            minLength = 1
+    )
+    private String password;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.UUID;
+
+@Schema(description = "Ответ при операциях аутентификации")
+public class AuthResponse {
+    @Schema(
+            description = "UUID пользователя (только для успешной авторизации)",
+            example = "123e4567-e89b-12d3-a456-426614174000",
+            nullable = true
+    )
+    private UUID id;
+
+    @Schema(
+            description = "Сообщение о результате операции",
+            example = "Authentication successful"
+    )
+    private String message;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+}package org.tictactoe.web.model;
+
+public class JwtRequest {
+    private String username;
+    private String password;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}// org.tictactoe.web.model.LeaderboardEntryResponse.java
+package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
+
+@Schema(description = "Запись в таблице лидеров")
+public class LeaderboardEntryResponse {
+    @Schema(description = "UUID пользователя", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID userId;
+
+    @Schema(description = "Имя пользователя", example = "player1")
+    private String username;
+
+    @Schema(description = "Всего сыграно игр", example = "10")
+    private int totalGames;
+
+    @Schema(description = "Выиграно игр", example = "6")
+    private int wins;
+
+    @Schema(description = "Проиграно игр", example = "3")
+    private int losses;
+
+    @Schema(description = "Ничьих", example = "1")
+    private int draws;
+
+    @Schema(description = "Процент побед", example = "60.0")
+    private double winRate;
+
+    @Schema(description = "Позиция в таблице лидеров", example = "1")
+    private int position;
+
+    // Геттеры и сеттеры
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public int getTotalGames() { return totalGames; }
+    public void setTotalGames(int totalGames) { this.totalGames = totalGames; }
+
+    public int getWins() { return wins; }
+    public void setWins(int wins) { this.wins = wins; }
+
+    public int getLosses() { return losses; }
+    public void setLosses(int losses) { this.losses = losses; }
+
+    public int getDraws() { return draws; }
+    public void setDraws(int draws) { this.draws = draws; }
+
+    public double getWinRate() { return winRate; }
+    public void setWinRate(double winRate) { this.winRate = winRate; }
+
+    public int getPosition() { return position; }
+    public void setPosition(int position) { this.position = position; }
+}package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Schema(description = "Информация о завершенной игре для истории")
+public class GameHistoryResponse {
+    @Schema(description = "ID игры", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID gameId;
+
+    @Schema(description = "Статус игры", example = "PLAYER_X_WON")
+    private String status;
+
+    @Schema(description = "Символ игрока в этой игре", example = "X")
+    private String playerSymbol;
+
+    @Schema(description = "Результат для игрока", example = "WIN")
+    private String result;
+
+    @Schema(description = "UUID противника", example = "223e4567-e89b-12d3-a456-426614174001")
+    private UUID opponentId;
+
+    @Schema(description = "Имя противника", example = "player2")
+    private String opponentUsername;
+
+    @Schema(description = "Символ противника", example = "O")
+    private String opponentSymbol;
+
+    @Schema(description = "Дата создания игры", example = "2024-01-15T10:30:00")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "Игра против компьютера", example = "false")
+    private boolean againstComputer;
+
+    // Геттеры и сеттеры
+    public UUID getGameId() { return gameId; }
+    public void setGameId(UUID gameId) { this.gameId = gameId; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getPlayerSymbol() { return playerSymbol; }
+    public void setPlayerSymbol(String playerSymbol) { this.playerSymbol = playerSymbol; }
+
+    public String getResult() { return result; }
+    public void setResult(String result) { this.result = result; }
+
+    public UUID getOpponentId() { return opponentId; }
+    public void setOpponentId(UUID opponentId) { this.opponentId = opponentId; }
+
+    public String getOpponentUsername() { return opponentUsername; }
+    public void setOpponentUsername(String opponentUsername) { this.opponentUsername = opponentUsername; }
+
+    public String getOpponentSymbol() { return opponentSymbol; }
+    public void setOpponentSymbol(String opponentSymbol) { this.opponentSymbol = opponentSymbol; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public boolean isAgainstComputer() { return againstComputer; }
+    public void setAgainstComputer(boolean againstComputer) { this.againstComputer = againstComputer; }
+}package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Запрос на выполнение хода в игре")
+public class GameRequest {
+    @Schema(
+            description = "Новое состояние игрового поля (3x3 матрица)",
+            example = "[[0,0,1],[0,2,0],[0,0,0]]",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    private int[][] board;
+
+    public int[][] getBoard() {
+        return board;
+    }
+
+    public void setBoard(int[][] board) {
+        this.board = board;
+    }
+}package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Schema(description = "Ответ с информацией об игре")
+public class GameResponse {
+    @Schema(
+            description = "UUID игры",
+            example = "123e4567-e89b-12d3-a456-426614174000"
+    )
+    private String gameId;
+
+    @Schema(
+            description = "Игровое поле (3x3 матрица), где 0 - пусто, 1 - игрок X, 2 - игрок O",
+            example = "[[0,0,1],[0,2,0],[0,0,0]]"
+    )
+    private int[][] board;
+
+    @Schema(
+            description = "Текущий статус игры",
+            example = "PLAYER_X_TURN",
+            allowableValues = {
+                    "WAITING_FOR_PLAYERS", "PLAYER_X_TURN", "PLAYER_O_TURN",
+                    "COMPUTER_TURN", "PLAYER_X_WON", "PLAYER_O_WON", "DRAW"
+            }
+    )
+    private String status;
+
+    @Schema(
+            description = "UUID игрока X",
+            example = "123e4567-e89b-12d3-a456-426614174000",
+            nullable = true
+    )
+    private UUID playerXId;
+
+    @Schema(
+            description = "UUID игрока O",
+            example = "223e4567-e89b-12d3-a456-426614174001",
+            nullable = true
+    )
+    private UUID playerOId;
+
+    @Schema(
+            description = "UUID текущего игрока (чей ход)",
+            example = "123e4567-e89b-12d3-a456-426614174000",
+            nullable = true
+    )
+    private UUID currentPlayerId;
+
+    @Schema(
+            description = "Игра против компьютера",
+            example = "true"
+    )
+    private boolean againstComputer;
+
+    @Schema(
+            description = "Символ текущего пользователя в этой игре (X или O)",
+            example = "X",
+            nullable = true
+    )
+    private String playerSymbol;
+
+    @Schema(
+            description = "Дата и время создания игры",
+            example = "2024-01-15T10:30:00"
+    )
+    private LocalDateTime createdAt;
+
+    @Schema(
+            description = "Символ игрока X (всегда 'X')",
+            example = "X"
+    )
+    private String playerXSymbol;
+
+    @Schema(
+            description = "Символ игрока O (всегда 'O')",
+            example = "O"
+    )
+    private String playerOSymbol;
+
+    public String getGameId() { return gameId; }
+    public void setGameId(String gameId) { this.gameId = gameId; }
+
+    public int[][] getBoard() { return board; }
+    public void setBoard(int[][] board) { this.board = board; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public UUID getPlayerXId() { return playerXId; }
+    public void setPlayerXId(UUID playerXId) { this.playerXId = playerXId; }
+
+    public UUID getPlayerOId() { return playerOId; }
+    public void setPlayerOId(UUID playerOId) { this.playerOId = playerOId; }
+
+    public UUID getCurrentPlayerId() { return currentPlayerId; }
+    public void setCurrentPlayerId(UUID currentPlayerId) { this.currentPlayerId = currentPlayerId; }
+
+    public boolean isAgainstComputer() { return againstComputer; }
+    public void setAgainstComputer(boolean againstComputer) { this.againstComputer = againstComputer; }
+
+    public String getPlayerSymbol() { return playerSymbol; }
+    public void setPlayerSymbol(String playerSymbol) { this.playerSymbol = playerSymbol; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getPlayerXSymbol() { return playerXSymbol; }
+    public void setPlayerXSymbol(String playerXSymbol) { this.playerXSymbol = playerXSymbol; }
+
+    public String getPlayerOSymbol() { return playerOSymbol; }
+    public void setPlayerOSymbol(String playerOSymbol) { this.playerOSymbol = playerOSymbol; }
+}package org.tictactoe.web.model;
+
+public class JwtResponse {
+    private String type = "Bearer";
+    private String accessToken;
+    private String refreshToken;
+
+    public JwtResponse() {
+    }
+
+    public JwtResponse(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+}package org.tictactoe.web.model;
+
+public class RefreshJwtRequest {
+    private String refreshToken;
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+}// org.tictactoe.web.model.CompletedGameResponse.java
+package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Schema(description = "Информация о завершенной игре")
+public class CompletedGameResponse {
+    @Schema(description = "ID игры", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID gameId;
+
+    @Schema(description = "Статус игры", example = "PLAYER_X_WON")
+    private String status;
+
+    @Schema(description = "Символ игрока в этой игре", example = "X")
+    private String playerSymbol;
+
+    @Schema(description = "Результат для игрока", example = "WIN")
+    private String result;
+
+    @Schema(description = "UUID противника", example = "223e4567-e89b-12d3-a456-426614174001")
+    private UUID opponentId;
+
+    @Schema(description = "Имя противника", example = "player2")
+    private String opponentUsername;
+
+    @Schema(description = "Символ противника", example = "O")
+    private String opponentSymbol;
+
+    @Schema(description = "Дата создания игры", example = "2024-01-15T10:30:00")
+    private LocalDateTime createdAt;
+
+    @Schema(description = "Игра против компьютера", example = "false")
+    private boolean againstComputer;
+
+    // Геттеры и сеттеры
+    public UUID getGameId() { return gameId; }
+    public void setGameId(UUID gameId) { this.gameId = gameId; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getPlayerSymbol() { return playerSymbol; }
+    public void setPlayerSymbol(String playerSymbol) { this.playerSymbol = playerSymbol; }
+
+    public String getResult() { return result; }
+    public void setResult(String result) { this.result = result; }
+
+    public UUID getOpponentId() { return opponentId; }
+    public void setOpponentId(UUID opponentId) { this.opponentId = opponentId; }
+
+    public String getOpponentUsername() { return opponentUsername; }
+    public void setOpponentUsername(String opponentUsername) { this.opponentUsername = opponentUsername; }
+
+    public String getOpponentSymbol() { return opponentSymbol; }
+    public void setOpponentSymbol(String opponentSymbol) { this.opponentSymbol = opponentSymbol; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public boolean isAgainstComputer() { return againstComputer; }
+    public void setAgainstComputer(boolean againstComputer) { this.againstComputer = againstComputer; }
+}package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
+
+@Schema(description = "Ответ с информацией о пользователе")
+public class UserResponse {
+    @Schema(description = "UUID пользователя", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID id;
+
+    @Schema(description = "Логин пользователя", example = "player1")
+    private String username;
+
+    @Schema(description = "Количество сыгранных игр", example = "10")
+    private int gamesPlayed;
+
+    @Schema(description = "Количество побед", example = "7")
+    private int wins;
+
+    @Schema(description = "Количество поражений", example = "2")
+    private int losses;
+
+    @Schema(description = "Количество ничьих", example = "1")
+    private int draws;
+
+    @Schema(description = "Процент побед", example = "70.0")
+    private double winRate;
+
+    @Schema(description = "Позиция в таблице лидеров", example = "5", nullable = true)
+    private Integer leaderboardPosition;
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public int getGamesPlayed() { return gamesPlayed; }
+    public void setGamesPlayed(int gamesPlayed) { this.gamesPlayed = gamesPlayed; }
+
+    public int getWins() { return wins; }
+    public void setWins(int wins) { this.wins = wins; }
+
+    public int getLosses() { return losses; }
+    public void setLosses(int losses) { this.losses = losses; }
+
+    public int getDraws() { return draws; }
+    public void setDraws(int draws) { this.draws = draws; }
+
+    public double getWinRate() { return winRate; }
+    public void setWinRate(double winRate) { this.winRate = winRate; }
+
+    public Integer getLeaderboardPosition() { return leaderboardPosition; }
+    public void setLeaderboardPosition(Integer leaderboardPosition) {
+        this.leaderboardPosition = leaderboardPosition;
+    }
+}// org.tictactoe.web.model.PlayerStatsResponse.java
+package org.tictactoe.web.model;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
+
+@Schema(description = "Статистика игрока")
+public class PlayerStatsResponse {
+    @Schema(description = "UUID пользователя", example = "123e4567-e89b-12d3-a456-426614174000")
+    private UUID userId;
+
+    @Schema(description = "Имя пользователя", example = "player1")
+    private String username;
+
+    @Schema(description = "Всего сыграно игр", example = "10")
+    private int totalGames;
+
+    @Schema(description = "Выиграно игр", example = "6")
+    private int wins;
+
+    @Schema(description = "Проиграно игр", example = "3")
+    private int losses;
+
+    @Schema(description = "Ничьих", example = "1")
+    private int draws;
+
+    @Schema(description = "Процент побед", example = "60.0")
+    private double winRate;
+
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public int getTotalGames() { return totalGames; }
+    public void setTotalGames(int totalGames) { this.totalGames = totalGames; }
+
+    public int getWins() { return wins; }
+    public void setWins(int wins) { this.wins = wins; }
+
+    public int getLosses() { return losses; }
+    public void setLosses(int losses) { this.losses = losses; }
+
+    public int getDraws() { return draws; }
+    public void setDraws(int draws) { this.draws = draws; }
+
+    public double getWinRate() { return winRate; }
+    public void setWinRate(double winRate) { this.winRate = winRate; }
+}package org.tictactoe;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class TicTacToeApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(TicTacToeApplication.class, args);
+
+        System.out.println("""          
+                 \u001B[1;32m
+                ************************
+                * Tic Tac Toe started! *
+                ************************
+                \u001B[0m""");
+    }
+}package org.tictactoe.datasource.mapper;
+
+import org.tictactoe.datasource.model.GameEntity;
+import org.tictactoe.domain.model.Game;
+import org.tictactoe.domain.model.GameStatus;
+
+import static org.tictactoe.domain.service.Constants.BOARD_SIZE;
+
+public class GameMapper {
+
+    private static int[][] stringToBoard(String stringBoard) {
+        int[][] board = new int[BOARD_SIZE][BOARD_SIZE];
+        String[] values = stringBoard.split(",");
+        int index = 0;
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                board[i][j] = Integer.parseInt(values[index++]);
+            }
+        }
+
+        return board;
+    }
+
+    private static String boardToString(int[][] board) {
+        StringBuilder stringBoard = new StringBuilder();
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                stringBoard.append(board[i][j]);
+                if (i != BOARD_SIZE - 1 || j != BOARD_SIZE - 1) stringBoard.append(",");
+            }
+        }
+
+        return stringBoard.toString();
+    }
+
+    public static Game toDomain(GameEntity entity) {
+        Game game = new Game();
+        game.setId(entity.getId());
+        game.setBoard(stringToBoard(entity.getBoard()));
+        game.setStatus(entity.getStatus());
+        game.setPlayerXId(entity.getPlayerXId());
+        game.setPlayerOId(entity.getPlayerOId());
+        game.setCurrentPlayerId(entity.getCurrentPlayerId());
+        game.setAgainstComputer(entity.isAgainstComputer());
+        game.setCreatedAt(entity.getCreatedAt());
+        game.setPlayerXSymbol(entity.getPlayerXSymbol());
+        game.setPlayerOSymbol(entity.getPlayerOSymbol());
+
+        return game;
+    }
+
+    public static GameEntity toEntity(Game domain) {
+        GameEntity entity = new GameEntity();
+        entity.setId(domain.getId());
+        entity.setBoard(boardToString(domain.getBoard()));
+        entity.setStatus(domain.getStatus());
+        entity.setPlayerXId(domain.getPlayerXId());
+        entity.setPlayerOId(domain.getPlayerOId());
+        entity.setCurrentPlayerId(domain.getCurrentPlayerId());
+        entity.setAgainstComputer(domain.isAgainstComputer());
+        entity.setCreatedAt(domain.getCreatedAt());
+        entity.setPlayerXSymbol(domain.getPlayerXSymbol());
+        entity.setPlayerOSymbol(domain.getPlayerOSymbol());
+
+        return entity;
+    }
+}package org.tictactoe.datasource.mapper;
+
+import org.tictactoe.datasource.model.UserEntity;
+import org.tictactoe.domain.model.User;
+import org.tictactoe.domain.model.Role;
+
+import java.util.stream.Collectors;
+
+public class UserMapper {
+
+    public static User toDomain(UserEntity entity) {
+        User user = new User();
+        user.setId(entity.getId());
+        user.setUsername(entity.getUsername());
+        user.setPassword(entity.getPassword());
+
+        if (entity.getRoles() != null) {
+            user.setRoles(
+                    entity.getRoles().stream()
+                            .map(roleName -> Role.valueOf(roleName))
+                            .collect(Collectors.toSet())
+            );
+        }
+
+        return user;
+    }
+
+    public static UserEntity toEntity(User domain) {
+        UserEntity entity = new UserEntity();
+        entity.setId(domain.getId());
+        entity.setUsername(domain.getUsername());
+        entity.setPassword(domain.getPassword());
+
+        if (domain.getRoles() != null) {
+            entity.setRoles(
+                    domain.getRoles().stream()
+                            .map(Role::name)
+                            .collect(Collectors.toSet())
+            );
+        }
+
+        return entity;
+    }
+}package org.tictactoe.datasource.model;
+
+import jakarta.persistence.*;
+import org.tictactoe.domain.model.GameStatus;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "games")
+public class GameEntity {
+    @Id
+    private UUID id;
+
+    @Column(name = "board", nullable = false)
+    private String board;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private GameStatus status;
+
+    @Column(name = "player_x_id")
+    private UUID playerXId;
+
+    @Column(name = "player_o_id")
+    private UUID playerOId;
+
+    @Column(name = "current_player_id")
+    private UUID currentPlayerId;
+
+    @Column(name = "is_against_computer", nullable = false)
+    private boolean isAgainstComputer;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "player_x_symbol", nullable = false)
+    private String playerXSymbol = "X";
+
+    @Column(name = "player_o_symbol", nullable = false)
+    private String playerOSymbol = "O";
+
+    public GameEntity() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getBoard() {
+        return board;
+    }
+
+    public void setBoard(String board) {
+        this.board = board;
+    }
+
+    public GameStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(GameStatus status) {
+        this.status = status;
+    }
+
+    public UUID getPlayerXId() {
+        return playerXId;
+    }
+
+    public void setPlayerXId(UUID playerXId) {
+        this.playerXId = playerXId;
+    }
+
+    public UUID getPlayerOId() {
+        return playerOId;
+    }
+
+    public void setPlayerOId(UUID playerOId) {
+        this.playerOId = playerOId;
+    }
+
+    public UUID getCurrentPlayerId() {
+        return currentPlayerId;
+    }
+
+    public void setCurrentPlayerId(UUID currentPlayerId) {
+        this.currentPlayerId = currentPlayerId;
+    }
+
+    public boolean isAgainstComputer() {
+        return isAgainstComputer;
+    }
+
+    public void setAgainstComputer(boolean againstComputer) {
+        isAgainstComputer = againstComputer;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getPlayerXSymbol() {
+        return playerXSymbol;
+    }
+
+    public void setPlayerXSymbol(String playerXSymbol) {
+        this.playerXSymbol = playerXSymbol;
+    }
+
+    public String getPlayerOSymbol() {
+        return playerOSymbol;
+    }
+
+    public void setPlayerOSymbol(String playerOSymbol) {
+        this.playerOSymbol = playerOSymbol;
+    }
+}package org.tictactoe.datasource.model;
+
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+@Entity
+@Table(name = "users")
+public class UserEntity {
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
+
+    @Column(name = "password", nullable = false)
+    private String password;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
+    private Set<String> roles = new HashSet<>();
+
+    public UserEntity() {
+        this.roles.add("USER");
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
+    }
+
+    public void addRole(String role) {
+        this.roles.add(role);
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<String> getRoles() {
+        return roles;
+    }
+}
+package org.tictactoe.datasource.repository;
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.tictactoe.datasource.model.UserEntity;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface UserRepository extends CrudRepository<UserEntity, UUID> {
+    Optional<UserEntity> findByUsername(String username);
+
+    boolean existsByUsername(String username);
+
+    @Query("SELECT u.username FROM UserEntity u WHERE u.id = :userId")
+    Optional<String> findUsernameById(UUID userId);
+}
+package org.tictactoe.datasource.repository;
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.tictactoe.datasource.model.GameEntity;
+import org.tictactoe.domain.model.GameStatus;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface GameRepository extends CrudRepository<GameEntity, UUID> {
+    List<GameEntity> findByStatus(GameStatus status);
+
+    List<GameEntity> findByPlayerXIdOrPlayerOId(UUID playerXId, UUID playerOId);
+
+    // Опиши запрос базы данных для получения всех завершенных игр по UUID пользователя
+    @Query("SELECT g FROM GameEntity g WHERE " +
+            "(g.playerXId = :userId OR g.playerOId = :userId) AND " +
+            "(g.status = 'PLAYER_X_WON' OR g.status = 'PLAYER_O_WON' OR g.status = 'DRAW') " +
+            "ORDER BY g.createdAt DESC")
+    List<GameEntity> findFinishedGamesByUserId(@Param("userId") UUID userId);
+
+    // Запрос для статистики пользователя
+    @Query("SELECT COUNT(g) FROM GameEntity g WHERE " +
+            "(g.playerXId = :userId OR g.playerOId = :userId) AND " +
+            "(g.status = 'PLAYER_X_WON' OR g.status = 'PLAYER_O_WON' OR g.status = 'DRAW')")
+    int countFinishedGamesByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(g) FROM GameEntity g WHERE " +
+            "((g.playerXId = :userId AND g.status = 'PLAYER_X_WON') OR " +
+            "(g.playerOId = :userId AND g.status = 'PLAYER_O_WON'))")
+    int countWinsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(g) FROM GameEntity g WHERE " +
+            "((g.playerXId = :userId AND g.status = 'PLAYER_O_WON') OR " +
+            "(g.playerOId = :userId AND g.status = 'PLAYER_X_WON'))")
+    int countLossesByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(g) FROM GameEntity g WHERE " +
+            "g.status = 'DRAW' AND (g.playerXId = :userId OR g.playerOId = :userId)")
+    int countDrawsByUserId(@Param("userId") UUID userId);
+
+    // Опиши запрос базы данных n лидеров
+    @Query(value = """
+        SELECT u.id as userId, u.username, 
+               COUNT(CASE 
+                   WHEN (g.player_x_id = u.id AND g.status = 'PLAYER_X_WON') OR 
+                        (g.player_o_id = u.id AND g.status = 'PLAYER_O_WON') 
+                   THEN 1 END) as wins,
+               COUNT(CASE 
+                   WHEN (g.player_x_id = u.id AND g.status = 'PLAYER_O_WON') OR 
+                        (g.player_o_id = u.id AND g.status = 'PLAYER_X_WON') 
+                   THEN 1 END) as losses,
+               COUNT(CASE 
+                   WHEN g.status = 'DRAW' AND 
+                        (g.player_x_id = u.id OR g.player_o_id = u.id) 
+                   THEN 1 END) as draws
+        FROM users u
+        LEFT JOIN games g ON (g.player_x_id = u.id OR g.player_o_id = u.id) 
+            AND (g.status = 'PLAYER_X_WON' OR g.status = 'PLAYER_O_WON' OR g.status = 'DRAW')
+        GROUP BY u.id, u.username
+        HAVING COUNT(g.id) > 0
+        ORDER BY wins DESC, losses ASC, draws ASC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findTopPlayers(@Param("limit") int limit);
+}package org.tictactoe.di;
+
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {}package org.tictactoe.di;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class SwaggerConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Tic Tac Toe API")
+                        .version("3.0")
+                        .description("API для игры в крестики-нолики"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("Введите JWT токен в формате: Bearer {token}")));
+    }
+}package org.tictactoe.di;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.tictactoe.web.filter.AuthFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    private final AuthFilter authFilter;
+
+    public SecurityConfig(AuthFilter authFilter) {
+        this.authFilter = authFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        // Разрешить доступ без аутентификации
+                        .requestMatchers("/auth/**").permitAll()
+//                        .requestMatchers("/auth/refresh/**").permitAll()
+                        .requestMatchers("/refresh").permitAll()
+                        // Swagger
+                        .requestMatchers("/swagger-ui/**").permitAll()
+//                        .requestMatchers("/swagger-ui/*").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
+                                .requestMatchers("/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
+                        .requestMatchers("/configuration/**").permitAll()
+
+                        // Все остальные запросы требуют аутентификации
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+}
